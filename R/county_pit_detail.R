@@ -5,7 +5,8 @@
 #' for each (shelter, subpopulation) is its disaggregated total (from
 #' \code{\link{homeless}}) scaled by its dominant CoC's share of that category.
 #' Long format; join to county geography by \code{fips} (e.g.
-#' \code{\link{counties}}).
+#' \code{\link{counties}}). As in \code{\link{pit_coc_detail}}, gender is
+#' available 2013--2024 only (\code{NA} from 2025 onward, dropped by HUD).
 #'
 #' @format A data frame with one row per county-year-shelter-subpopulation and 5
 #'   variables:

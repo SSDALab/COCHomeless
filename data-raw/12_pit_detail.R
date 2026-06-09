@@ -20,6 +20,24 @@ shelter_levels <- c("Overall", "Sheltered Total", "Sheltered ES",
 
 d <- utils::read.csv("data-raw/downloads/pit_coc_detail.csv",
                      colClasses = c(coc_num = "character"))
+
+# Gender is only in the 2007-2024 workbook (HUD dropped it from the 2007-2025
+# release), available 2013-2024. Merge those gender subpopulations in; they are
+# NA in 2025 and before 2013 via the grid completion below.
+gen_csv  <- "data-raw/downloads/pit_detail_2024file.csv"
+gen_xlsb <- "data-raw/downloads/PIT-by-CoC-2024.xlsb"   # 2007-2024 workbook
+if (!file.exists(gen_csv) && file.exists(gen_xlsb)) {
+  system2(Sys.which("python3"),
+          c("data-raw/pit_coc_detail_extract.py", shQuote(gen_xlsb), shQuote(gen_csv)))
+}
+if (file.exists(gen_csv)) {
+  g <- utils::read.csv(gen_csv, colClasses = c(coc_num = "character"))
+  g <- g[grepl("(Woman|Man|Transgender|Non Binary|More Than One Gender|Gender Questioning)$",
+               g$subpopulation), ]
+  d <- rbind(d, g)
+  message("merged gender: ", length(unique(g$subpopulation)), " subpops, ",
+          "years ", min(g$year), "-", max(g$year))
+}
 d$shelter <- factor(d$shelter, levels = shelter_levels)
 combos <- distinct(d, shelter, subpopulation)
 message("shelter x subpop combos: ", nrow(combos),

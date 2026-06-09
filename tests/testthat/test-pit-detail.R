@@ -22,10 +22,24 @@ test_that("pit_coc_detail / county_pit_detail are well-formed", {
                       levels(factor(d$shelter))))
     expect_true("All" %in% as.character(d$subpopulation))
     expect_true(all(d$count >= 0, na.rm = TRUE))
-    # gender/race/age categories are present
-    expect_true(any(grepl("Veterans|Female|Black|Asian|Age ",
-                          as.character(unique(d$subpopulation)))))
+    # subpopulation categories present: veterans, race, age, and gender
+    subs <- as.character(unique(d$subpopulation))
+    expect_true(any(grepl("Veterans", subs)))
+    expect_true(any(grepl("Black|Asian", subs)))
+    expect_true(any(grepl("^Age ", subs)))
+    expect_true(all(c("Woman", "Man", "Transgender") %in% subs))   # gender
   }
+})
+
+test_that("gender is present 2013-2024 and NA in 2025", {
+  skip_if_not("pit_coc_detail" %in% all_datasets(), "not built")
+  d <- get_dataset("pit_coc_detail")
+  w <- d[d$subpopulation == "Woman" & d$shelter == "Overall", ]
+  yrs <- sort(unique(w$year[!is.na(w$count)]))
+  expect_true(2024 %in% yrs)             # gender present through 2024
+  expect_true(min(yrs) <= 2015)          # and back to the mid-2010s
+  expect_false(2025 %in% yrs)            # dropped from the 2025 file
+  expect_true(all(is.na(w$count[w$year == 2025])))
 })
 
 test_that("spatial objects carry the core shelter breakouts", {
