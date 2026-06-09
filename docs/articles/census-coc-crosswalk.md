@@ -221,6 +221,43 @@ ggplot(m[m$ST == "CA", ]) + geom_sf(aes(fill = count)) +
 
 ![](census-coc-crosswalk_files/figure-html/gender-map-1.png)
 
+The same at the **county** level uses `county_pit_detail` (joined to
+`counties` by `fips`). Gender composition over time for the four metro
+counties:
+
+``` r
+
+metro_fips <- c("Los Angeles" = "06037", "San Francisco" = "06075",
+                "Multnomah (Portland)" = "41051", "King (Seattle)" = "53033")
+gc <- subset(county_pit_detail,
+             shelter == "Overall" & fips %in% metro_fips &
+             as.character(subpopulation) %in% gen_levels & !is.na(count))
+gc$place  <- names(metro_fips)[match(gc$fips, metro_fips)]
+gc$gender <- factor(as.character(gc$subpopulation), levels = gen_levels)
+ggplot(gc, aes(year, count, color = gender)) +
+  geom_line() + geom_point(size = 0.7) +
+  facet_wrap(~ place, scales = "free_y") +
+  labs(title = "County homeless by gender, 2014-2024", y = NULL, x = NULL,
+       color = NULL) + theme_minimal()
+```
+
+![](census-coc-crosswalk_files/figure-html/gender-county-1.png)
+
+And homeless women by county, California & Washington 2024:
+
+``` r
+
+wc <- subset(county_pit_detail,
+             year == 2024 & shelter == "Overall" & subpopulation == "Woman")
+cw <- merge(counties[counties$STUSPS %in% c("CA", "WA"), ],
+            wc[, c("fips", "count")], by = "fips")
+ggplot(cw) + geom_sf(aes(fill = count), color = NA) +
+  scale_fill_viridis_c(trans = "sqrt", name = "Women") +
+  labs(title = "Homeless women by county, CA & WA 2024") + theme_void()
+```
+
+![](census-coc-crosswalk_files/figure-html/gender-county-map-1.png)
+
 ## CoC codes over time
 
 CoCs merge and are renumbered. Roll a historical code forward to its
