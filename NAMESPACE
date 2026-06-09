@@ -1,0 +1,4 @@
+# Data-only package: datasets are lazy-loaded, nothing is exported.
+# sf is imported so the shipped sf objects (coc*, counties, states, sp_homeless)
+# have their methods available when the namespace is loaded.
+importFrom(sf, st_crs)

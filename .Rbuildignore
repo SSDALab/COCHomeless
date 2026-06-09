@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^CLAUDE\.md$
+^\.gitignore$
+^LICENSE\.md$
+^figure$
+^vignettes/figure$

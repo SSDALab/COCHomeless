@@ -1,0 +1,14 @@
+#' County-level homeless estimates, 2007-2025 (pre-imputation, with missing values)
+#'
+#' Identical to \code{\link{homeless}} but \emph{before} imputation: counties
+#' that overlapped no HUD Continuum of Care in a given year retain a missing
+#' (\code{NA}) count for that year. This is the input to the spatial-Poisson
+#' imputation step that produces \code{homeless}.
+#'
+#' @format A data frame with 3143 rows and the same columns as
+#'   \code{\link{homeless}}; the yearly \code{count07}--\code{count25} columns
+#'   contain \code{NA} for counties with no CoC coverage that year (about 1--3
+#'   percent of counties).
+#' @source HUD Point-in-Time data (see \code{\link{hud2007}}) disaggregated to
+#'   counties; ACS covariates via \pkg{tidycensus}.
+"homeless_na"

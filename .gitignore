@@ -1,0 +1,22 @@
+# Secrets / local env — never commit
+.Renviron
+.Renviron.*
+*.Renviron
+.env
+
+# R session / build cruft
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+*.rdb
+*.rdx
+
+# OS
+.DS_Store
+
+# downloaded source data (large, not committed)
+data-raw/downloads/
+
+# internal working notes (not published)
+CLAUDE.md

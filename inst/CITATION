@@ -1,0 +1,27 @@
+citHeader("To cite the COCHomeless package in publications, please cite the methodology paper:")
+
+bibentry(
+  bibtype  = "Article",
+  title    = "Connecting Continuum of Care point-in-time homeless counts to United States Census areal units",
+  author   = c(person("Zack W.", "Almquist"),
+               person("Nathaniel E.", "Helwig"),
+               person("Yun", "You")),
+  journal  = "Mathematical Population Studies",
+  year     = "2020",
+  volume   = "27",
+  number   = "1",
+  pages    = "46--58",
+  doi      = "10.1080/08898480.2019.1636574"
+)
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "COCHomeless: Datasets and Spatial Tools for United States Homelessness Research",
+  author   = person("Zack W.", "Almquist"),
+  year     = "2026",
+  note     = "R package version 0.2.0",
+  url      = "https://github.com/SSDALab/COCHomeless",
+  header   = "And, optionally, the software package:"
+)
+
+citFooter("When using the Census-to-CoC crosswalk datasets (tract_coc*, county_coc*), please also credit Tom Byrne; see their help pages.")

@@ -1,0 +1,91 @@
+---
+title: "Census-to-CoC crosswalk"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Census-to-CoC crosswalk}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+have_tc <- requireNamespace("tidycensus", quietly = TRUE)
+```
+
+```{r setup}
+library(COCHomeless)
+```
+
+The crosswalk datasets link Census geography to HUD Continuum of Care (CoC)
+areas, in both directions:
+
+* `tract_coc2019` / `tract_coc2022` -- a hard assignment of each census tract to
+  the CoC containing it.
+* `tract_coc_wt2019` -- area weights for tracts that straddle a CoC border.
+* `county_coc2019` -- county <-> CoC area weights (`w_coc` apportions a CoC down
+  to counties; `w_county` aggregates a county up to CoCs).
+
+The crosswalk procedure is due to Tom Byrne (Boston University); please credit
+Byrne when using these data.
+
+## National overview
+
+```{r national}
+nrow(tract_coc2019)                       # ~73k tracts assigned
+length(unique(tract_coc2019$COCNUM))      # ~394 CoCs
+# tracts that split across more than one CoC (area-weighted file)
+sum(table(tract_coc_wt2019$GEOID) > 1)
+```
+
+## Focus: a California and a Washington CoC
+
+List the counties that make up Seattle/King County (WA-500) and how much of the
+CoC falls in each, using the area weights:
+
+```{r wa-counties}
+wa500 <- county_coc2019[county_coc2019$COCNUM == "WA-500", ]
+wa500[order(-wa500$w_coc), c("fips", "w_coc")]
+```
+
+The tracts assigned to San Francisco's CoC (CA-501):
+
+```{r ca-tracts}
+ca501 <- tract_coc2019[tract_coc2019$COCNUM == "CA-501", ]
+head(ca501[, c("GEOID", "fips", "COCNAME")])
+nrow(ca501)
+```
+
+## Aggregating an ACS variable up to a CoC
+
+Pull a tract-level American Community Survey variable and aggregate it to CoCs
+using the area weights. (Requires a Census API key; not run here.)
+
+```{r acs-rollup, eval = FALSE}
+library(tidycensus)
+library(dplyr)
+# tract population for Washington
+pop <- get_acs("tract", variables = "B01003_001", state = "WA",
+               year = 2019, survey = "acs5")
+tract_coc_wt2019 %>%
+  inner_join(pop, by = c("GEOID")) %>%
+  group_by(COCNUM, COCNAME) %>%
+  summarise(coc_population = sum(estimate * w_tract), .groups = "drop") %>%
+  arrange(desc(coc_population))
+```
+
+## CoC codes over time
+
+CoCs merge and are renumbered. Roll a historical code forward to its surviving
+CoC with `coc_mergers`:
+
+```{r mergers}
+head(coc_mergers)
+resolve_coc <- function(code, mergers = coc_mergers) {
+  repeat {
+    hit <- mergers$coc_post[match(code, mergers$coc_pre)]
+    if (is.na(hit) || hit == code) return(code)
+    code <- hit
+  }
+}
+resolve_coc("AR-502")
+```

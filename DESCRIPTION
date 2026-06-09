@@ -1,0 +1,43 @@
+Package: COCHomeless
+Type: Package
+Title: Datasets and Spatial Tools for United States Homelessness Research
+Version: 0.2.0
+Authors@R: c(
+    person("Zack W.", "Almquist", role = c("aut", "cre"),
+           email = "zalmquist@uw.edu",
+           comment = c(ORCID = "0000-0002-1967-7762")),
+    person("Yun", "You", role = "ctb"),
+    person("Tom", "Byrne", role = "ctb",
+           comment = "Census-to-CoC crosswalk procedure"))
+Description: A data package supporting research on homelessness in the United
+    States. It provides United States Department of Housing and Urban
+    Development (HUD) Continuum of Care (CoC) Point-in-Time homeless counts,
+    CoC geographic boundaries as simple-feature objects, a Census-to-CoC
+    crosswalk linking census tracts and counties to CoCs, and county-level
+    homeless estimates with American Community Survey covariates. County
+    estimates follow the areal-unit linkage of Almquist, Helwig and You
+    (2020) <doi:10.1080/08898480.2019.1636574>.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Depends: R (>= 3.5.0)
+Imports: sf
+Suggests:
+    tidycensus,
+    dplyr,
+    tidyr,
+    ggplot2,
+    tigris,
+    scales,
+    patchwork,
+    imputeTS,
+    forecast,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 7.3.3
+URL: https://github.com/SSDALab/COCHomeless
+BugReports: https://github.com/SSDALab/COCHomeless/issues
+Config/testthat/edition: 3
