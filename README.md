@@ -40,9 +40,12 @@ reconstruction.
 
 | Object | What |
 |---|---|
-| `tract_coc2019`, `tract_coc2022` | tract → CoC hard assignment |
-| `tract_coc_wt2019`, `tract_coc_wt2022` | tract ↔ CoC area weights |
-| `county_coc2019`, `county_coc2022` | county ↔ CoC weights (both directions) |
+| `tract_coc2007` … `tract_coc2025` | tract → CoC hard assignment, by year |
+| `tract_coc_wt2007` … `tract_coc_wt2025` | tract ↔ CoC area weights, by year |
+| `county_coc2007` … `county_coc2025` | county ↔ CoC weights (both directions), by year |
+
+Tract geography uses 2010-census tracts for 2007–2019 and 2020-census tracts for
+2020–2025.
 
 **3. County-level estimates** (CoC counts disaggregated to counties)
 

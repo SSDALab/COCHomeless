@@ -3,8 +3,25 @@
 \docType{data}
 \name{tract_coc_wt}
 \alias{tract_coc_wt}
+\alias{tract_coc_wt2007}
+\alias{tract_coc_wt2008}
+\alias{tract_coc_wt2009}
+\alias{tract_coc_wt2010}
+\alias{tract_coc_wt2011}
+\alias{tract_coc_wt2012}
+\alias{tract_coc_wt2013}
+\alias{tract_coc_wt2014}
+\alias{tract_coc_wt2015}
+\alias{tract_coc_wt2016}
+\alias{tract_coc_wt2017}
+\alias{tract_coc_wt2018}
 \alias{tract_coc_wt2019}
+\alias{tract_coc_wt2020}
+\alias{tract_coc_wt2021}
 \alias{tract_coc_wt2022}
+\alias{tract_coc_wt2023}
+\alias{tract_coc_wt2024}
+\alias{tract_coc_wt2025}
 \title{Tract to CoC area-weighted overlap crosswalk}
 \format{
 A data frame with one row per (tract, CoC) overlap and 5 variables:
@@ -16,16 +33,84 @@ A data frame with one row per (tract, CoC) overlap and 5 variables:
   \item{w_tract}{Share of the tract's area in this CoC; sums to 1 per tract.}
 }
 
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 75728 rows and 5 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84680 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 85189 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84945 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84930 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84618 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84299 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84457 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84515 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84506 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84545 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84334 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84788 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96783 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96847 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96684 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96722 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96838 rows and 5 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 96849 rows and 5 columns.
 }
 \source{
 HUD CoC GIS National Boundary files; IPUMS NHGIS tract geography.
   See \code{\link{tract_coc2019}}.
 }
 \usage{
+tract_coc_wt2007
+
+tract_coc_wt2008
+
+tract_coc_wt2009
+
+tract_coc_wt2010
+
+tract_coc_wt2011
+
+tract_coc_wt2012
+
+tract_coc_wt2013
+
+tract_coc_wt2014
+
+tract_coc_wt2015
+
+tract_coc_wt2016
+
+tract_coc_wt2017
+
+tract_coc_wt2018
+
 tract_coc_wt2019
 
+tract_coc_wt2020
+
+tract_coc_wt2021
+
 tract_coc_wt2022
+
+tract_coc_wt2023
+
+tract_coc_wt2024
+
+tract_coc_wt2025
 }
 \description{
 Area-weighted overlap between census tracts and HUD Continuum of Care (CoC)

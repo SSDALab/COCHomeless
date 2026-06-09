@@ -35,8 +35,59 @@
 #'   areal units. \emph{Mathematical Population Studies}, 27(1), 46--58.
 #'   \doi{10.1080/08898480.2019.1636574}
 #' @name county_coc
-#' @aliases county_coc2019 county_coc2022
+#' @aliases county_coc2007 county_coc2008 county_coc2009 county_coc2010 county_coc2011 county_coc2012 county_coc2013 county_coc2014 county_coc2015 county_coc2016 county_coc2017 county_coc2018 county_coc2019 county_coc2020 county_coc2021 county_coc2022 county_coc2023 county_coc2024 county_coc2025
+"county_coc2007"
+
+#' @rdname county_coc
+"county_coc2008"
+
+#' @rdname county_coc
+"county_coc2009"
+
+#' @rdname county_coc
+"county_coc2010"
+
+#' @rdname county_coc
+"county_coc2011"
+
+#' @rdname county_coc
+"county_coc2012"
+
+#' @rdname county_coc
+"county_coc2013"
+
+#' @rdname county_coc
+"county_coc2014"
+
+#' @rdname county_coc
+"county_coc2015"
+
+#' @rdname county_coc
+"county_coc2016"
+
+#' @rdname county_coc
+"county_coc2017"
+
+#' @rdname county_coc
+"county_coc2018"
+
+#' @rdname county_coc
 "county_coc2019"
 
 #' @rdname county_coc
+"county_coc2020"
+
+#' @rdname county_coc
+"county_coc2021"
+
+#' @rdname county_coc
 "county_coc2022"
+
+#' @rdname county_coc
+"county_coc2023"
+
+#' @rdname county_coc
+"county_coc2024"
+
+#' @rdname county_coc
+"county_coc2025"

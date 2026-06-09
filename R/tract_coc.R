@@ -31,8 +31,59 @@
 #'   geography from IPUMS NHGIS (\url{https://www.nhgis.org/}). Crosswalk
 #'   procedure adapted from Tom Byrne's \code{tract_coc_match} program.
 #' @name tract_coc
-#' @aliases tract_coc2019 tract_coc2022
+#' @aliases tract_coc2007 tract_coc2008 tract_coc2009 tract_coc2010 tract_coc2011 tract_coc2012 tract_coc2013 tract_coc2014 tract_coc2015 tract_coc2016 tract_coc2017 tract_coc2018 tract_coc2019 tract_coc2020 tract_coc2021 tract_coc2022 tract_coc2023 tract_coc2024 tract_coc2025
+"tract_coc2007"
+
+#' @rdname tract_coc
+"tract_coc2008"
+
+#' @rdname tract_coc
+"tract_coc2009"
+
+#' @rdname tract_coc
+"tract_coc2010"
+
+#' @rdname tract_coc
+"tract_coc2011"
+
+#' @rdname tract_coc
+"tract_coc2012"
+
+#' @rdname tract_coc
+"tract_coc2013"
+
+#' @rdname tract_coc
+"tract_coc2014"
+
+#' @rdname tract_coc
+"tract_coc2015"
+
+#' @rdname tract_coc
+"tract_coc2016"
+
+#' @rdname tract_coc
+"tract_coc2017"
+
+#' @rdname tract_coc
+"tract_coc2018"
+
+#' @rdname tract_coc
 "tract_coc2019"
 
 #' @rdname tract_coc
+"tract_coc2020"
+
+#' @rdname tract_coc
+"tract_coc2021"
+
+#' @rdname tract_coc
 "tract_coc2022"
+
+#' @rdname tract_coc
+"tract_coc2023"
+
+#' @rdname tract_coc
+"tract_coc2024"
+
+#' @rdname tract_coc
+"tract_coc2025"

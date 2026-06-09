@@ -1,139 +1,103 @@
 ################################################################################
 # 01_tract_coc_crosswalk.R
 #
-# Build the Census <-> Continuum of Care (CoC) crosswalk datasets.
+# Build the Census <-> Continuum of Care (CoC) crosswalk datasets for every year
+# 2007-2025:
+#   tract_cocYEAR     hard assignment of each census tract to the CoC containing
+#                     its interior point (st_point_on_surface + st_join).
+#   tract_coc_wtYEAR  area-weighted tract<->CoC overlap (w_tract sums to 1/tract).
+#   county_cocYEAR    county<->CoC area weights (w_coc sums to 1/CoC; w_county
+#                     sums to 1/county).
 #
-# Two products per CoC vintage YEAR:
-#   tract_cocYEAR     hard assignment: each census tract -> the single CoC that
-#                     contains its interior point (st_point_on_surface), via a
-#                     point-in-polygon join.  ~73k rows.  (Tom Byrne's method,
-#                     adapted from 001_tract_coc_match.R.)
-#   tract_coc_wtYEAR  area-weighted overlap: st_intersection of tract polygons
-#                     with CoC polygons, giving each (tract, CoC) pair its share
-#                     of the tract's area.  Tracts that straddle a CoC boundary
-#                     split across rows; area shares per tract sum to 1.  Also
-#                     rolled up to county -> CoC area weights (`fips`, `COCNUM`,
-#                     `w_area`) for apportioning CoC counts down to counties in
-#                     05_county_estimates.R.  Population weights are layered on
-#                     there using tidycensus tract population.
+# Census tract geography changes only at the decennial census, so two tract
+# vintages are used: 2010-census tracts (IPUMS NHGIS) for 2007-2019, and
+# 2020-census tracts (tigris) for 2020-2025. Each year's tracts are matched
+# against that year's CoC boundaries (the package coc<year> sf objects).
 #
-# Inputs (HUD CoC GIS National Boundary geodatabases + an IPUMS NHGIS tract
-# shapefile).  Point COC_CROSSWALK_DATA at the directory holding them; it
-# defaults to the reference crosswalk repo used to develop this package.
-#
-# CREDIT: the tract-centroid point-in-polygon matching procedure is due to
-# Tom Byrne (Boston University, tbyrne@bu.edu), from his program
-# 001_tract_coc_match.R.  Please cite Byrne when using the crosswalk datasets.
+# Crosswalk procedure due to Tom Byrne; see
+# https://github.com/tomhbyrne/HUD-CoC-Geography-Crosswalk
+# Run from the package root. Requires CENSUS_API_KEY in ~/.Renviron (tigris).
 ################################################################################
 
-suppressMessages({
-  library(sf)
-  library(dplyr)
-})
+suppressMessages({ library(sf); library(dplyr); library(tigris) })
+sf_use_s2(FALSE)
+options(tigris_use_cache = TRUE, tigris_class = "sf")
+stopifnot(dir.exists("data"))
+EQ <- 5070L
+dl <- "data-raw/downloads"; dir.create(dl, showWarnings = FALSE, recursive = TRUE)
 
-data_dir <- Sys.getenv(
-  "COC_CROSSWALK_DATA",
-  unset = "~/Documents/back-up-oldMP/Back_up/github/SSDALab/World_Widd_Homelessness/CoC_Crosswalk/data"
-)
-data_dir <- path.expand(data_dir)
+prep_tracts <- function(x) {
+  x |> st_transform(EQ) |> st_make_valid() |>
+    transmute(STATEFP, COUNTYFP, TRACTCE, GEOID,
+              fips = paste0(STATEFP, COUNTYFP))
+}
 
-# Run this script from the package root (COCHomeless/); outputs land in data/.
-out_dir <- "data"
-if (!dir.exists(out_dir)) stop("run from the package root (COCHomeless/): no data/ dir")
+## ---- 2010-census tracts (IPUMS NHGIS) --------------------------------------
+nhgis <- Sys.getenv("NHGIS_TRACTS_2019", paste0(
+  "~/Documents/back-up-oldMP/Back_up/github/SSDALab/World_Widd_Homelessness/",
+  "CoC_Crosswalk/data/nhgis0013_shape/nhgis0013_shapefile_tl2019_us_tract_2019/",
+  "US_tract_2019.shp"))
+tracts2010 <- prep_tracts(st_read(path.expand(nhgis), quiet = TRUE))
+message("2010-vintage tracts: ", nrow(tracts2010))
 
-sf::sf_use_s2(FALSE)  # avoid s2 point-in-polygon errors on HUD/NHGIS polygons
+## ---- 2020-census tracts (tigris, national, cached; loaded on first need) ----
+.tracts2020 <- NULL
+get_tracts2020 <- function() {
+  if (!is.null(.tracts2020)) return(.tracts2020)
+  t2020_cache <- file.path(dl, "tracts2020.rds")
+  if (file.exists(t2020_cache)) {
+    t <- readRDS(t2020_cache)
+  } else {
+    st_fips <- sort(union(unique(substr(tracts2010$fips, 1, 2)), c("02","15","72")))
+    parts <- lapply(st_fips, function(s)
+      tryCatch(tracts(state = s, year = 2020, cb = TRUE, progress_bar = FALSE),
+               error = function(e) NULL))
+    t <- prep_tracts(do.call(rbind, Filter(Negate(is.null), parts)))
+    saveRDS(t, t2020_cache)
+  }
+  message("2020-vintage tracts: ", nrow(t))
+  .tracts2020 <<- t; t
+}
 
-# Equal-area projection for all geometric work (areas, intersections,
-# point-on-surface).  EPSG:5070 = NAD83 / Conus Albers (m).
-EQ_AREA <- 5070L
-
-## ---- inputs per vintage --------------------------------------------------
-# Map each CoC boundary vintage to its geodatabase and the matching tract
-# shapefile.  Extend this list as new HUD CoC GIS files are added (2016-2024).
-vintages <- list(
-  `2019` = list(
-    coc   = file.path(data_dir, "CoC_GIS_National_Boundary_2019/FY19_CoC_National_Bnd.gdb"),
-    tract = file.path(data_dir, "nhgis0013_shape/nhgis0013_shapefile_tl2019_us_tract_2019/US_tract_2019.shp")
-  ),
-  `2022` = list(
-    coc   = file.path(data_dir, "CoC_GIS_National_Boundary_2022/CoC_GIS_National_Boundary.gdb"),
-    # HUD CoC 2022 reuses the 2019 ACS tract geography (same vintage as Byrne).
-    tract = file.path(data_dir, "nhgis0013_shape/nhgis0013_shapefile_tl2019_us_tract_2019/US_tract_2019.shp")
-  )
-)
-
-build_crosswalk <- function(year, coc_path, tract_path) {
-  message("== ", year, " ==")
-
-  cocs <- st_read(coc_path, quiet = TRUE) |>
-    st_transform(EQ_AREA) |>
-    st_make_valid() |>
-    transmute(ST, STATE_NAME, COCNUM, COCNAME)
-
-  tracts <- st_read(tract_path, quiet = TRUE) |>
-    st_transform(EQ_AREA) |>
-    st_make_valid() |>
-    transmute(STATEFP, COUNTYFP, TRACTCE, GEOID)
+build_year <- function(yr) {
+  tr <- if (yr <= 2019) tracts2010 else get_tracts2020()
+  load(sprintf("data/coc%d.rda", yr)); coc <- get(sprintf("coc%d", yr))
+  cc <- coc[, c("COCNUM", "COCNAME", "ST", "STATE_NAME")] |>
+    st_transform(EQ) |> st_make_valid()
 
   ## hard assignment: tract interior point -> containing CoC
-  pts <- st_point_on_surface(tracts)
-  hard <- st_join(pts, cocs) |>
-    st_drop_geometry() |>
-    mutate(fips = paste0(STATEFP, COUNTYFP)) |>
-    select(GEOID, STATEFP, COUNTYFP, fips, TRACTCE, ST, STATE_NAME, COCNUM, COCNAME)
+  pts <- suppressWarnings(st_point_on_surface(tr))
+  hard <- st_join(pts, cc) |> st_drop_geometry() |>
+    select(GEOID, STATEFP, COUNTYFP, fips, TRACTCE, ST, STATE_NAME, COCNUM, COCNAME) |>
+    distinct(GEOID, .keep_all = TRUE)   # one CoC per tract (drop boundary dup matches)
 
-  ## area-weighted overlap: intersect tract polygons with CoC polygons
-  tracts$tract_area <- as.numeric(st_area(tracts))
-  inter <- st_intersection(tracts, cocs)
+  ## area-weighted overlap
+  tr$tract_area <- as.numeric(st_area(tr))
+  inter <- st_intersection(tr, cc)
   inter$piece_area <- as.numeric(st_area(inter))
-  inter <- inter |>
-    st_drop_geometry() |>
-    mutate(fips = paste0(STATEFP, COUNTYFP)) |>
-    filter(piece_area > 0)
+  inter <- inter |> st_drop_geometry() |> filter(piece_area > 0)
 
-  ## tract -> CoC: w_tract = share of the tract's area in each CoC (sums to 1
-  ## per tract).  Use to aggregate tract-level ACS values up to CoCs.
   wt_tract <- inter |>
     mutate(w_tract = piece_area / tract_area) |>
-    filter(w_tract > 1e-6) |>                      # drop slivers
-    group_by(GEOID) |>
-    mutate(w_tract = w_tract / sum(w_tract)) |>
-    ungroup() |>
+    filter(w_tract > 1e-6) |>
+    group_by(GEOID) |> mutate(w_tract = w_tract / sum(w_tract)) |> ungroup() |>
     select(GEOID, fips, COCNUM, COCNAME, w_tract)
 
-  ## county <-> CoC overlap with two normalizations:
-  ##   w_coc    = share of each CoC's area in a county  (sums to 1 per COCNUM)
-  ##              -> apportion a CoC's PIT count DOWN to counties.
-  ##   w_county = share of each county's area in a CoC  (sums to 1 per fips)
-  ##              -> aggregate county data UP to CoCs.
   wt_county <- inter |>
     group_by(fips, COCNUM, COCNAME) |>
     summarise(area_m2 = sum(piece_area), .groups = "drop") |>
-    group_by(COCNUM)  |> mutate(w_coc    = area_m2 / sum(area_m2)) |> ungroup() |>
-    group_by(fips)    |> mutate(w_county = area_m2 / sum(area_m2)) |> ungroup()
+    group_by(COCNUM) |> mutate(w_coc = area_m2 / sum(area_m2)) |> ungroup() |>
+    group_by(fips)   |> mutate(w_county = area_m2 / sum(area_m2)) |> ungroup()
 
-  list(hard = hard, wt_tract = wt_tract, wt_county = wt_county)
-}
-
-for (yr in names(vintages)) {
-  v <- vintages[[yr]]
-  if (!file.exists(v$coc) || !file.exists(v$tract)) {
-    message("skip ", yr, ": missing input(s)"); next
+  for (no in list(c("tract_coc","hard"), c("tract_coc_wt","wt_tract"),
+                  c("county_coc","wt_county"))) {
+    obj <- sprintf("%s%d", no[1], yr); assign(obj, get(no[2]))
+    save(list = obj, file = file.path("data", paste0(obj, ".rda")), compress = "xz")
   }
-  res <- build_crosswalk(yr, v$coc, v$tract)
-
-  tract_coc    <- res$hard
-  tract_coc_wt <- res$wt_tract
-  county_coc   <- res$wt_county
-
-  assign(paste0("tract_coc",    yr), tract_coc)
-  assign(paste0("tract_coc_wt", yr), tract_coc_wt)
-  assign(paste0("county_coc",   yr), county_coc)
-
-  save(list = paste0("tract_coc",    yr), file = file.path(out_dir, paste0("tract_coc",    yr, ".rda")), compress = "xz")
-  save(list = paste0("tract_coc_wt", yr), file = file.path(out_dir, paste0("tract_coc_wt", yr, ".rda")), compress = "xz")
-  save(list = paste0("county_coc",   yr), file = file.path(out_dir, paste0("county_coc",   yr, ".rda")), compress = "xz")
-
-  message(sprintf("  %s: %d tracts assigned, %d weighted pieces, %d county-CoC pairs",
-                  yr, nrow(tract_coc), nrow(tract_coc_wt), nrow(county_coc)))
+  message(sprintf("  coc%d: %d tracts, %d CoCs, %d county-CoC pairs", yr,
+                  nrow(hard), length(unique(stats::na.omit(hard$COCNUM))), nrow(wt_county)))
 }
+
+years <- as.integer(strsplit(Sys.getenv("XWALK_YEARS",
+            paste(2007:2025, collapse = ",")), ",")[[1]])
+for (y in years) { message("== ", y, " =="); build_year(y) }

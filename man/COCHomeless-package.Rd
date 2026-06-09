@@ -36,6 +36,7 @@ the Census-to-CoC crosswalk are given on the crosswalk help pages
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://ssdalab.github.io/COCHomeless}
   \item \url{https://github.com/SSDALab/COCHomeless}
   \item Report bugs at \url{https://github.com/SSDALab/COCHomeless/issues}
 }

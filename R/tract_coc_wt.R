@@ -23,8 +23,59 @@
 #' @source HUD CoC GIS National Boundary files; IPUMS NHGIS tract geography.
 #'   See \code{\link{tract_coc2019}}.
 #' @name tract_coc_wt
-#' @aliases tract_coc_wt2019 tract_coc_wt2022
+#' @aliases tract_coc_wt2007 tract_coc_wt2008 tract_coc_wt2009 tract_coc_wt2010 tract_coc_wt2011 tract_coc_wt2012 tract_coc_wt2013 tract_coc_wt2014 tract_coc_wt2015 tract_coc_wt2016 tract_coc_wt2017 tract_coc_wt2018 tract_coc_wt2019 tract_coc_wt2020 tract_coc_wt2021 tract_coc_wt2022 tract_coc_wt2023 tract_coc_wt2024 tract_coc_wt2025
+"tract_coc_wt2007"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2008"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2009"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2010"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2011"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2012"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2013"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2014"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2015"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2016"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2017"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2018"
+
+#' @rdname tract_coc_wt
 "tract_coc_wt2019"
 
 #' @rdname tract_coc_wt
+"tract_coc_wt2020"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2021"
+
+#' @rdname tract_coc_wt
 "tract_coc_wt2022"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2023"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2024"
+
+#' @rdname tract_coc_wt
+"tract_coc_wt2025"

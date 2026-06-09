@@ -3,8 +3,25 @@
 \docType{data}
 \name{county_coc}
 \alias{county_coc}
+\alias{county_coc2007}
+\alias{county_coc2008}
+\alias{county_coc2009}
+\alias{county_coc2010}
+\alias{county_coc2011}
+\alias{county_coc2012}
+\alias{county_coc2013}
+\alias{county_coc2014}
+\alias{county_coc2015}
+\alias{county_coc2016}
+\alias{county_coc2017}
+\alias{county_coc2018}
 \alias{county_coc2019}
+\alias{county_coc2020}
+\alias{county_coc2021}
 \alias{county_coc2022}
+\alias{county_coc2023}
+\alias{county_coc2024}
+\alias{county_coc2025}
 \title{County to CoC area-weighted crosswalk}
 \format{
 A data frame with one row per (county, CoC) overlap and 6 variables:
@@ -17,16 +34,84 @@ A data frame with one row per (county, CoC) overlap and 6 variables:
   \item{w_county}{Share of the county's area in this CoC; sums to 1 per county.}
 }
 
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6941 rows and 6 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6827 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6838 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6825 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6805 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6783 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6676 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6670 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6650 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6649 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6664 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6649 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6717 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6645 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6671 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6666 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6670 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6701 rows and 6 columns.
+
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 6711 rows and 6 columns.
 }
 \source{
 HUD CoC GIS National Boundary files; IPUMS NHGIS tract geography.
   See \code{\link{tract_coc2019}}.
 }
 \usage{
+county_coc2007
+
+county_coc2008
+
+county_coc2009
+
+county_coc2010
+
+county_coc2011
+
+county_coc2012
+
+county_coc2013
+
+county_coc2014
+
+county_coc2015
+
+county_coc2016
+
+county_coc2017
+
+county_coc2018
+
 county_coc2019
 
+county_coc2020
+
+county_coc2021
+
 county_coc2022
+
+county_coc2023
+
+county_coc2024
+
+county_coc2025
 }
 \description{
 Area-weighted overlap between U.S. counties and HUD Continuum of Care (CoC)

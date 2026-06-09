@@ -3,8 +3,25 @@
 \docType{data}
 \name{tract_coc}
 \alias{tract_coc}
+\alias{tract_coc2007}
+\alias{tract_coc2008}
+\alias{tract_coc2009}
+\alias{tract_coc2010}
+\alias{tract_coc2011}
+\alias{tract_coc2012}
+\alias{tract_coc2013}
+\alias{tract_coc2014}
+\alias{tract_coc2015}
+\alias{tract_coc2016}
+\alias{tract_coc2017}
+\alias{tract_coc2018}
 \alias{tract_coc2019}
+\alias{tract_coc2020}
+\alias{tract_coc2021}
 \alias{tract_coc2022}
+\alias{tract_coc2023}
+\alias{tract_coc2024}
+\alias{tract_coc2025}
 \title{Census tract to Continuum of Care (CoC) hard assignment crosswalk}
 \format{
 A data frame with one row per census tract and 9 variables:
@@ -21,6 +38,40 @@ A data frame with one row per census tract and 9 variables:
 }
 
 An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 73666 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
+
+An object of class \code{data.frame} with 85061 rows and 9 columns.
 }
 \source{
 HUD CoC GIS National Boundary files
@@ -29,9 +80,43 @@ HUD CoC GIS National Boundary files
   procedure adapted from Tom Byrne's \code{tract_coc_match} program.
 }
 \usage{
+tract_coc2007
+
+tract_coc2008
+
+tract_coc2009
+
+tract_coc2010
+
+tract_coc2011
+
+tract_coc2012
+
+tract_coc2013
+
+tract_coc2014
+
+tract_coc2015
+
+tract_coc2016
+
+tract_coc2017
+
+tract_coc2018
+
 tract_coc2019
 
+tract_coc2020
+
+tract_coc2021
+
 tract_coc2022
+
+tract_coc2023
+
+tract_coc2024
+
+tract_coc2025
 }
 \description{
 Assigns each U.S. census tract to the single HUD Continuum of Care (CoC)

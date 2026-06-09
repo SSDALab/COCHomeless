@@ -43,14 +43,16 @@ List the counties that make up Seattle/King County (WA-500) and how much of the
 CoC falls in each, using the area weights:
 
 ```{r wa-counties}
-wa500 <- county_coc2019[county_coc2019$COCNUM == "WA-500", ]
+# use subset() (or which()): some tracts have NA COCNUM, and indexing a data
+# frame with a logical vector containing NA returns spurious NA rows.
+wa500 <- subset(county_coc2019, COCNUM == "WA-500")
 wa500[order(-wa500$w_coc), c("fips", "w_coc")]
 ```
 
 The tracts assigned to San Francisco's CoC (CA-501):
 
 ```{r ca-tracts}
-ca501 <- tract_coc2019[tract_coc2019$COCNUM == "CA-501", ]
+ca501 <- subset(tract_coc2019, COCNUM == "CA-501")
 head(ca501[, c("GEOID", "fips", "COCNAME")])
 nrow(ca501)
 ```
