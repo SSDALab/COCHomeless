@@ -30,13 +30,18 @@ the vignettes show an ARIMA reconstruction.
 
 **1. CoC level (HUD administrative areas)**
 
-| Object                | What                                                |
-|-----------------------|-----------------------------------------------------|
-| `hud2007` … `hud2025` | PIT “Overall Homeless” count per CoC, by year       |
-| `coc2007` … `coc2025` | CoC boundary polygons (national `sf`), by year      |
-| `coc_mergers`         | CoC merger crosswalk over time (code lineage)       |
-| `pit_us`              | national totals split into sheltered / unsheltered  |
-| `hud2025_prelim`      | preliminary 2025 estimate (superseded by `hud2025`) |
+| Object | What |
+|----|----|
+| `hud2007` … `hud2025` | PIT “Overall Homeless” count per CoC, by year |
+| `coc2007` … `coc2025` | CoC boundary polygons (national `sf`), by year |
+| `coc_mergers` | CoC merger crosswalk over time (code lineage) |
+| `pit_us` | national totals split into sheltered / unsheltered |
+| `pit_coc` | per-CoC sheltered / unsheltered / total, 2007–2025 |
+| `pit_coc_detail` | per-CoC by shelter type × subpopulation (veterans, chronic, youth, families, gender, race, age) |
+| `hud2025_prelim` | preliminary 2025 estimate (superseded by `hud2025`) |
+
+CoC boundaries (`coc20XX`) also carry that year’s
+`total`/`sheltered`/`unsheltered`.
 
 **2. Census ↔︎ CoC crosswalk** (links Census tracts/counties to CoCs)
 
@@ -55,7 +60,9 @@ tracts for 2020–2025.
 |----|----|
 | `homeless` | county estimates `count07`…`count25` + ACS covariates (imputed) |
 | `homeless_na` | same, before imputation (missing counties as `NA`) |
-| `sp_homeless` | `homeless` as an `sf` object for mapping |
+| `sp_homeless` | `homeless` as `sf`, also carrying `sheltered<yy>`/`unsheltered<yy>` |
+| `county_pit` | county sheltered / unsheltered / total, 2007–2025 (long) |
+| `county_pit_detail` | county by shelter type × subpopulation (gender, race, age, …) |
 | `counties`, `states` | full-US `sf` base layers |
 | `area` | county land area (km²) |
 

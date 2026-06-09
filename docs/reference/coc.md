@@ -72,63 +72,76 @@ attributes plus geometry:
 
   State/territory name.
 
+- total:
+
+  Overall Point-in-Time homeless count that year (`NA` if the CoC has no
+  PIT record).
+
+- sheltered:
+
+  Sheltered homeless count that year.
+
+- unsheltered:
+
+  Unsheltered homeless count that year.
+
 - geometry:
 
   CoC boundary polygon.
 
 An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
-with 448 rows and 5 columns.
+with 448 rows and 8 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 450 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 450 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 442 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 442 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 431 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 431 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 422 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 422 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 411 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 411 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 413 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 413 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 399 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 399 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 398 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 398 rows and 8
 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 397 rows and 5
-columns.
-
-An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
-with 393 rows and 5 columns.
-
-An object of class `sf` (inherits from `data.frame`) with 398 rows and 5
-columns.
-
-An object of class `sf` (inherits from `data.frame`) with 389 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 397 rows and 8
 columns.
 
 An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
-with 389 rows and 5 columns.
+with 393 rows and 8 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 386 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 398 rows and 8
+columns.
+
+An object of class `sf` (inherits from `data.frame`) with 389 rows and 8
 columns.
 
 An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
-with 387 rows and 5 columns.
+with 389 rows and 8 columns.
 
-An object of class `sf` (inherits from `data.frame`) with 387 rows and 5
+An object of class `sf` (inherits from `data.frame`) with 386 rows and 8
 columns.
 
 An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
-with 388 rows and 5 columns.
+with 387 rows and 8 columns.
+
+An object of class `sf` (inherits from `data.frame`) with 387 rows and 8
+columns.
+
+An object of class `sf` (inherits from `tbl_df`, `tbl`, `data.frame`)
+with 388 rows and 8 columns.
 
 ## Source
 

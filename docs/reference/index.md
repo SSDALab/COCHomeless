@@ -48,6 +48,11 @@
   [`county_coc2024`](https://ssdalab.github.io/COCHomeless/reference/county_coc.md)
   [`county_coc2025`](https://ssdalab.github.io/COCHomeless/reference/county_coc.md)
   : County to CoC area-weighted crosswalk
+- [`county_pit`](https://ssdalab.github.io/COCHomeless/reference/county_pit.md)
+  : County-level homeless estimates by shelter status, 2007-2025
+- [`county_pit_detail`](https://ssdalab.github.io/COCHomeless/reference/county_pit_detail.md)
+  : Detailed county Point-in-Time estimates by shelter type and
+  subpopulation
 - [`homeless`](https://ssdalab.github.io/COCHomeless/reference/homeless.md)
   : County-level homeless estimates, 2007-2024 (missing values imputed)
 - [`homeless_na`](https://ssdalab.github.io/COCHomeless/reference/homeless_na.md)
@@ -75,6 +80,10 @@
   CoC-level Point-in-Time (PIT) homeless counts, 2007-2025
 - [`hud2025_prelim`](https://ssdalab.github.io/COCHomeless/reference/hud2025_prelim.md)
   : Preliminary 2025 homelessness estimates (NOT official HUD data)
+- [`pit_coc`](https://ssdalab.github.io/COCHomeless/reference/pit_coc.md)
+  : Per-CoC Point-in-Time homeless counts by shelter status, 2007-2025
+- [`pit_coc_detail`](https://ssdalab.github.io/COCHomeless/reference/pit_coc_detail.md)
+  : Detailed CoC Point-in-Time counts by shelter type and subpopulation
 - [`pit_us`](https://ssdalab.github.io/COCHomeless/reference/pit_us.md)
   : National Point-in-Time homeless totals by shelter status, 2007-2025
 - [`sp_homeless`](https://ssdalab.github.io/COCHomeless/reference/sp_homeless.md)

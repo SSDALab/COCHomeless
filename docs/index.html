@@ -107,11 +107,20 @@
 <td>national totals split into sheltered / unsheltered</td>
 </tr>
 <tr>
+<td><code>pit_coc</code></td>
+<td>per-CoC sheltered / unsheltered / total, 2007–2025</td>
+</tr>
+<tr>
+<td><code>pit_coc_detail</code></td>
+<td>per-CoC by shelter type × subpopulation (veterans, chronic, youth, families, gender, race, age)</td>
+</tr>
+<tr>
 <td><code>hud2025_prelim</code></td>
 <td>preliminary 2025 estimate (superseded by <code>hud2025</code>)</td>
 </tr>
 </tbody>
 </table>
+<p>CoC boundaries (<code>coc20XX</code>) also carry that year’s <code>total</code>/<code>sheltered</code>/<code>unsheltered</code>.</p>
 <p><strong>2. Census ↔︎ CoC crosswalk</strong> (links Census tracts/counties to CoCs)</p>
 <table class="table">
 <colgroup>
@@ -166,7 +175,16 @@
 <tr>
 <td><code>sp_homeless</code></td>
 <td>
-<code>homeless</code> as an <code>sf</code> object for mapping</td>
+<code>homeless</code> as <code>sf</code>, also carrying <code>sheltered&lt;yy&gt;</code>/<code>unsheltered&lt;yy&gt;</code>
+</td>
+</tr>
+<tr>
+<td><code>county_pit</code></td>
+<td>county sheltered / unsheltered / total, 2007–2025 (long)</td>
+</tr>
+<tr>
+<td><code>county_pit_detail</code></td>
+<td>county by shelter type × subpopulation (gender, race, age, …)</td>
 </tr>
 <tr>
 <td>

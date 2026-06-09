@@ -15,8 +15,10 @@ sp_homeless
 
 An `sf` data frame (CRS EPSG:4269, NAD83) with 3143 rows, the columns of
 [`homeless`](https://ssdalab.github.io/COCHomeless/reference/homeless.md)
-(county `fips`, yearly `count07`–`count25`, ACS covariates, `avg`), and
-a county boundary `geometry` column.
+(county `fips`, yearly total `count07`–`count25`, ACS covariates,
+`avg`), the yearly shelter split `sheltered07`–`sheltered25` and
+`unsheltered07`–`unsheltered25`, and a county boundary `geometry`
+column.
 
 ## Source
 
