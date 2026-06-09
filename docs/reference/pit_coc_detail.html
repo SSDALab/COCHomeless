@@ -94,7 +94,12 @@ format, one row per CoC x year x shelter x subpopulation.</p>
     <p>The grid is completed across years, so a subpopulation HUD only began
 reporting in a later year (or a category whose definition changed, e.g. the
 2023 race/ethnicity revision) is <code>NA</code> in years it was not collected
-rather than missing. Join to CoC geography by <code>coc_num</code> (=
+rather than missing.</p>
+<p><strong>Gender:</strong> the gender categories (Woman, Man, Transgender, Non Binary,
+More Than One Gender, Gender Questioning) are available <strong>2013–2024
+only</strong>. HUD dropped the gender breakdown from the 2025 PIT-by-CoC release, so
+gender is <code>NA</code> from 2025 onward and will remain unavailable in this data
+source unless HUD restores it. Join to CoC geography by <code>coc_num</code> (=
 <code>coc2024$COCNUM</code>); for a county version see <code><a href="county_pit_detail.html">county_pit_detail</a></code>.</p>
     </div>
 

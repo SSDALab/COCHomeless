@@ -50,6 +50,12 @@ HUD AHAR Part 1 PIT estimates, from the PIT-by-CoC workbook (see
 The grid is completed across years, so a subpopulation HUD only began
 reporting in a later year (or a category whose definition changed, e.g.
 the 2023 race/ethnicity revision) is `NA` in years it was not collected
-rather than missing. Join to CoC geography by `coc_num` (=
-`coc2024$COCNUM`); for a county version see
+rather than missing.
+
+**Gender:** the gender categories (Woman, Man, Transgender, Non Binary,
+More Than One Gender, Gender Questioning) are available **2013–2024
+only**. HUD dropped the gender breakdown from the 2025 PIT-by-CoC
+release, so gender is `NA` from 2025 onward and will remain unavailable
+in this data source unless HUD restores it. Join to CoC geography by
+`coc_num` (= `coc2024$COCNUM`); for a county version see
 [`county_pit_detail`](https://ssdalab.github.io/COCHomeless/reference/county_pit_detail.md).

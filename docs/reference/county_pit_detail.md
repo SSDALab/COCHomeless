@@ -8,6 +8,10 @@ value for each (shelter, subpopulation) is its disaggregated total (from
 scaled by its dominant CoC's share of that category. Long format; join
 to county geography by `fips` (e.g.
 [`counties`](https://ssdalab.github.io/COCHomeless/reference/counties.md)).
+As in
+[`pit_coc_detail`](https://ssdalab.github.io/COCHomeless/reference/pit_coc_detail.md),
+gender is available 2013–2024 only (`NA` from 2025 onward, dropped by
+HUD).
 
 ## Usage
 

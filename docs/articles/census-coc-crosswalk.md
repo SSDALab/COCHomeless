@@ -180,6 +180,47 @@ ggplot(cw) + geom_sf(aes(fill = count), color = NA) +
 
 ![](census-coc-crosswalk_files/figure-html/county-subpop-1.png)
 
+## Homelessness by gender over time
+
+The 2007–2024 PIT file reports gender (Woman, Man, Transgender, Non
+Binary, More Than One Gender, Gender Questioning), available 2013–2024
+(HUD dropped it from the 2025 release, so it is `NA` in 2025).
+Composition over time for the four metro CoCs:
+
+``` r
+
+gen_levels <- c("Woman", "Man", "Transgender", "Non Binary",
+                "More Than One Gender", "Gender Questioning")
+metros <- c("Los Angeles" = "CA-600", "San Francisco" = "CA-501",
+            "Multnomah (Portland)" = "OR-501", "King (Seattle)" = "WA-500")
+g <- subset(pit_coc_detail,
+            shelter == "Overall" & coc_num %in% metros &
+            as.character(subpopulation) %in% gen_levels & !is.na(count))
+g$place  <- names(metros)[match(g$coc_num, metros)]
+g$gender <- factor(as.character(g$subpopulation), levels = gen_levels)
+ggplot(g, aes(year, count, color = gender)) +
+  geom_line() + geom_point(size = 0.7) +
+  facet_wrap(~ place, scales = "free_y") +
+  labs(title = "Homeless by gender, 2013-2024", y = NULL, x = NULL, color = NULL) +
+  theme_minimal()
+```
+
+![](census-coc-crosswalk_files/figure-html/gender-1.png)
+
+Mapped: women experiencing homelessness by CoC, California 2024:
+
+``` r
+
+w <- subset(pit_coc_detail,
+            year == 2024 & shelter == "Overall" & subpopulation == "Woman")
+m <- merge(coc2024, w[, c("coc_num", "count")], by.x = "COCNUM", by.y = "coc_num")
+ggplot(m[m$ST == "CA", ]) + geom_sf(aes(fill = count)) +
+  scale_fill_viridis_c(trans = "sqrt", name = "Women") +
+  labs(title = "Homeless women by CoC, California 2024") + theme_void()
+```
+
+![](census-coc-crosswalk_files/figure-html/gender-map-1.png)
+
 ## CoC codes over time
 
 CoCs merge and are renumbered. Roll a historical code forward to its
