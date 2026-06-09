@@ -95,6 +95,25 @@ ggplot(m24s) +
   theme_void()
 ```
 
+## Homeless by gender over time (CoC level)
+
+`pit_coc_detail` carries HUD's gender breakdown, available 2014--2024 (dropped
+from the 2025 release). National totals by gender, summing across CoCs:
+
+```{r gender-coc, eval = have_map}
+gen_levels <- c("Woman", "Man", "Transgender", "Non Binary",
+                "More Than One Gender", "Gender Questioning")
+g <- subset(pit_coc_detail, shelter == "Overall" &
+            as.character(subpopulation) %in% gen_levels & !is.na(count))
+agg <- aggregate(count ~ year + subpopulation, g, sum)
+agg$subpopulation <- factor(as.character(agg$subpopulation), levels = gen_levels)
+ggplot(agg, aes(year, count, color = subpopulation)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 1) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "U.S. homeless by gender (CoC level), 2014-2024",
+       y = NULL, x = NULL, color = NULL) + theme_minimal()
+```
+
 ## A helper for the two state examples
 
 ```{r helper, eval = have_map}
