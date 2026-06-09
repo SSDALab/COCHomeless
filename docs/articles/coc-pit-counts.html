@@ -149,9 +149,29 @@ compact lower-48 layout:</p>
 <p><img src="coc-pit-counts_files/figure-html/national-map-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
+<h2 id="homeless-by-gender-over-time-coc-level">Homeless by gender over time (CoC level)<a class="anchor" aria-label="anchor" href="#homeless-by-gender-over-time-coc-level"></a>
+</h2>
+<p><code>pit_coc_detail</code> carries HUD’s gender breakdown, available
+2014–2024 (dropped from the 2025 release). National totals by gender,
+summing across CoCs:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gen_levels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Woman"</span>, <span class="st">"Man"</span>, <span class="st">"Transgender"</span>, <span class="st">"Non Binary"</span>,</span>
+<span>                <span class="st">"More Than One Gender"</span>, <span class="st">"Gender Questioning"</span><span class="op">)</span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">pit_coc_detail</span>, <span class="va">shelter</span> <span class="op">==</span> <span class="st">"Overall"</span> <span class="op">&amp;</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">subpopulation</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">gen_levels</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">agg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">year</span> <span class="op">+</span> <span class="va">subpopulation</span>, <span class="va">g</span>, <span class="va">sum</span><span class="op">)</span></span>
+<span><span class="va">agg</span><span class="op">$</span><span class="va">subpopulation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">agg</span><span class="op">$</span><span class="va">subpopulation</span><span class="op">)</span>, levels <span class="op">=</span> <span class="va">gen_levels</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">agg</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">year</span>, <span class="va">count</span>, color <span class="op">=</span> <span class="va">subpopulation</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="va"><a href="https://scales.r-lib.org/reference/comma.html" class="external-link">comma</a></span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"U.S. homeless by gender (CoC level), 2014-2024"</span>,</span>
+<span>       y <span class="op">=</span> <span class="cn">NULL</span>, x <span class="op">=</span> <span class="cn">NULL</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="coc-pit-counts_files/figure-html/gender-coc-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level2">
 <h2 id="a-helper-for-the-two-state-examples">A helper for the two state examples<a class="anchor" aria-label="anchor" href="#a-helper-for-the-two-state-examples"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># the 3 largest CoCs in a state in 2024, and a short label for the map</span></span>
 <span><span class="va">top_cocs</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">st</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">s</span> <span class="op">&lt;-</span> <span class="va">m24</span><span class="op">[</span><span class="va">m24</span><span class="op">$</span><span class="va">ST</span> <span class="op">==</span> <span class="va">st</span>, <span class="op">]</span></span>
@@ -181,13 +201,13 @@ compact lower-48 layout:</p>
 <div class="section level2">
 <h2 id="california">California<a class="anchor" aria-label="anchor" href="#california"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">state_map</span><span class="op">(</span><span class="st">"CA"</span>, <span class="st">"California: PIT homeless by CoC, 2024 (top 3 labeled)"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not</span></span>
 <span><span class="co">#&gt; give correct results for longitude/latitude data</span></span></code></pre></div>
 <p><img src="coc-pit-counts_files/figure-html/ca-map-1.png" class="r-plt" alt="" width="672"></p>
 <p>Year-by-year trend for California’s three largest CoCs:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ca_top</span> <span class="op">&lt;-</span> <span class="fu">top_cocs</span><span class="op">(</span><span class="st">"CA"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu">coc_series</span><span class="op">(</span><span class="va">ca_top</span><span class="op">$</span><span class="va">COCNUM</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">year</span>, <span class="va">count</span>, color <span class="op">=</span> <span class="va">COCNUM</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.3</span><span class="op">)</span> <span class="op">+</span></span>
@@ -199,13 +219,13 @@ compact lower-48 layout:</p>
 <div class="section level2">
 <h2 id="washington">Washington<a class="anchor" aria-label="anchor" href="#washington"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">state_map</span><span class="op">(</span><span class="st">"WA"</span>, <span class="st">"Washington: PIT homeless by CoC, 2024 (top 3 labeled)"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not</span></span>
 <span><span class="co">#&gt; give correct results for longitude/latitude data</span></span></code></pre></div>
 <p><img src="coc-pit-counts_files/figure-html/wa-map-1.png" class="r-plt" alt="" width="672"></p>
 <p>Year-by-year trend for Washington’s three largest CoCs:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wa_top</span> <span class="op">&lt;-</span> <span class="fu">top_cocs</span><span class="op">(</span><span class="st">"WA"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu">coc_series</span><span class="op">(</span><span class="va">wa_top</span><span class="op">$</span><span class="va">COCNUM</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">year</span>, <span class="va">count</span>, color <span class="op">=</span> <span class="va">COCNUM</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.3</span><span class="op">)</span> <span class="op">+</span></span>

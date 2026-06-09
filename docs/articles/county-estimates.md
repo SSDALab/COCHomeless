@@ -97,6 +97,29 @@ ggplot(trend, aes(year, per100k, color = region)) +
 
 ![](county-estimates_files/figure-html/region-trends-pc-1.png)
 
+## Homeless by gender over time (county level)
+
+`county_pit_detail` carries the gender breakdown apportioned to counties
+(available 2014–2024; dropped by HUD from 2025). National totals by
+gender:
+
+``` r
+
+gen_levels <- c("Woman", "Man", "Transgender", "Non Binary",
+                "More Than One Gender", "Gender Questioning")
+g <- subset(county_pit_detail, shelter == "Overall" &
+            as.character(subpopulation) %in% gen_levels & !is.na(count))
+agg <- aggregate(count ~ year + subpopulation, g, sum)
+agg$subpopulation <- factor(as.character(agg$subpopulation), levels = gen_levels)
+ggplot(agg, aes(year, count, color = subpopulation)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 1) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "U.S. homeless by gender (county level), 2014-2024",
+       y = NULL, x = NULL, color = NULL) + theme_minimal()
+```
+
+![](county-estimates_files/figure-html/gender-county-trend-1.png)
+
 ## County vs CoC: the same data at two resolutions
 
 Disaggregating to counties reveals spatial detail that the CoC areas
