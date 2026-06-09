@@ -31,44 +31,48 @@ An \code{sf} data frame (CRS EPSG:4269, NAD83) with one row per CoC
   \item{COCNAME}{CoC name.}
   \item{ST}{Two-letter state/territory abbreviation.}
   \item{STATE_NAME}{State/territory name.}
+  \item{total}{Overall Point-in-Time homeless count that year (\code{NA} if
+    the CoC has no PIT record).}
+  \item{sheltered}{Sheltered homeless count that year.}
+  \item{unsheltered}{Unsheltered homeless count that year.}
   \item{geometry}{CoC boundary polygon.}
 }
 
-An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 448 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 448 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 450 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 450 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 442 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 442 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 431 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 431 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 422 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 422 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 411 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 411 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 413 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 413 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 399 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 399 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 398 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 398 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 397 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 397 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 393 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 393 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 398 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 398 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 389 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 389 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 389 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 389 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 386 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 386 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 387 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 387 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{data.frame}) with 387 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{data.frame}) with 387 rows and 8 columns.
 
-An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 388 rows and 5 columns.
+An object of class \code{sf} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 388 rows and 8 columns.
 }
 \source{
 HUD CoC GIS tools:

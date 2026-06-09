@@ -6,9 +6,11 @@
 \title{County homeless estimates as a spatial (sf) object}
 \format{
 An \code{sf} data frame (CRS EPSG:4269, NAD83) with 3143 rows, the
-  columns of \code{\link{homeless}} (county \code{fips}, yearly
-  \code{count07}--\code{count25}, ACS covariates, \code{avg}), and a county
-  boundary \code{geometry} column.
+  columns of \code{\link{homeless}} (county \code{fips}, yearly total
+  \code{count07}--\code{count25}, ACS covariates, \code{avg}), the yearly
+  shelter split \code{sheltered07}--\code{sheltered25} and
+  \code{unsheltered07}--\code{unsheltered25}, and a county boundary
+  \code{geometry} column.
 }
 \source{
 HUD Point-in-Time data disaggregated to counties; county geometry

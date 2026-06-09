@@ -16,6 +16,10 @@
 #'   \item{COCNAME}{CoC name.}
 #'   \item{ST}{Two-letter state/territory abbreviation.}
 #'   \item{STATE_NAME}{State/territory name.}
+#'   \item{total}{Overall Point-in-Time homeless count that year (\code{NA} if
+#'     the CoC has no PIT record).}
+#'   \item{sheltered}{Sheltered homeless count that year.}
+#'   \item{unsheltered}{Unsheltered homeless count that year.}
 #'   \item{geometry}{CoC boundary polygon.}
 #' }
 #' @source HUD CoC GIS tools:
