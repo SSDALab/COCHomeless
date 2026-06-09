@@ -38,6 +38,6 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
-URL: https://github.com/SSDALab/COCHomeless
+URL: https://ssdalab.github.io/COCHomeless, https://github.com/SSDALab/COCHomeless
 BugReports: https://github.com/SSDALab/COCHomeless/issues
 Config/testthat/edition: 3

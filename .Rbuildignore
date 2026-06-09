@@ -6,3 +6,5 @@
 ^LICENSE\.md$
 ^figure$
 ^vignettes/figure$
+^docs$
+^_pkgdown\.yml$
