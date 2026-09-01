@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,39 @@
       <small>Source: <a href="https://github.com/SSDALab/COCHomeless/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="cochomeless-030">COCHomeless 0.3.0<a class="anchor" aria-label="anchor" href="#cochomeless-030"></a></h2>
+<div class="section level3">
+<h3 id="data-corrections-0-3-0">Data corrections<a class="anchor" aria-label="anchor" href="#data-corrections-0-3-0"></a></h3>
+<p>Three defects caused data to be silently dropped rather than to raise an error. All published national and county figures change as a result; anyone with analyses in flight against 0.2.0 should re-run them.</p>
+<ul><li><p><strong>Kansas City (<code>MO-604</code>) was missing from the entire series, 2007-2025.</strong> HUD writes footnoted CoC codes with a trailing letter in the source workbook, and Kansas City appears as <code>MO-604a</code> because the CoC spans Missouri and Kansas. The import filter rejected the code outright, so the CoC was absent from <code>hud2007</code> through <code>hud2025</code>, <code>pit_coc</code> and <code>pit_coc_detail</code> – and, because <code>pit_us</code> is computed by summing the same filtered rows, the national totals were understated by the same amount with nothing to disagree with. Between 1,575 and 2,992 people per year were missing. <code>pit_us</code> for 2024 was 769,299 against HUD’s published 771,480; it is now 771,480. Footnote markers are stripped on import, and the extractors now fail loudly if any CoC-shaped code is rejected.</p></li>
+<li><p><strong>Every Connecticut county read 0 in every year.</strong> Connecticut replaced its eight counties (<code>09001</code>-<code>09015</code>) with nine planning regions (<code>09110</code>-<code>09190</code>). The county frame carried the planning regions, but the population and area benchmarks that drive the apportionment weights were still on the 2010 county vintage, so all nine regions had no density weight, fell out of the apportionment, were skipped by the imputation, and were written out as zeros. Alaska’s Chugach (<code>02063</code>), Copper River (<code>02066</code>) and Kusilvak (<code>02158</code>) and South Dakota’s Oglala Lakota (<code>46102</code>) were zeroed the same way. Connecticut county totals now reproduce the Connecticut CoC totals exactly from 2015 on.</p></li>
+<li><p><strong>Counties whose primary CoC had no detail profile were dropped from <code>county_pit_detail</code>.</strong> An inner join removed them from the dataset entirely rather than falling back. This affected all nine Connecticut planning regions plus Wyandotte County, Kansas and Jackson County, Missouri (both in <code>MO-604</code>). Such counties now fall back to the national shelter-by-subpopulation profile.</p></li>
+<li><p><strong>Kansas counties were roughly 29% above their officially reported state total.</strong> MO-604 (Kansas City) covers territory in both Missouri and Kansas; HUD’s by-CoC workbook reports one combined row coded to Missouri, while HUD’s by-State workbook reports the two portions separately. The apportionment saw only the combined figure, so population-density weighting handed dense Wyandotte County, Kansas a large share of Missouri’s count. The county estimates now use HUD’s published state split, and Kansas and Missouri reproduce their official state totals exactly from 2019 on.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="validation-against-hud-0-3-0">Validation against HUD<a class="anchor" aria-label="anchor" href="#validation-against-hud-0-3-0"></a></h3>
+<p>The package is built from HUD’s “PIT Counts by CoC” workbook. HUD separately publishes “PIT Counts by State”, an independent tabulation of the same count, and the two are now reconciled in the test suite (<code>tests/testthat/fixtures/hud_pit_by_state.csv</code>):</p>
+<ul><li>National totals match HUD’s published figures exactly in all 19 years.</li>
+<li>CoC-derived state totals match exactly for all 49 states outside the Missouri/Kansas bi-state CoC.</li>
+<li>County-derived state totals reproduce HUD’s state totals with a median deviation of 0.00% from 2011 onward, and all 51 states within about 2% for 2023-2025.</li>
+<li>The national rate of 23 per 10,000 for 2024 is reproduced, and every state’s rate per 10,000 matches the rate computed from HUD’s own published totals.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-0-3-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-3-0"></a></h3>
+<ul><li><p><strong>One canonical county FIPS vintage.</strong> <code>counties</code> is pinned to the 2024 TIGER/Line vintage and every county-keyed dataset – <code>area</code>, <code>homeless</code>, <code>homeless_na</code>, <code>sp_homeless</code>, <code>county_pit</code>, <code>county_pit_detail</code>, and the <code>county_coc*</code> / <code>tract_coc*</code> crosswalks – is keyed on it. Previously three vintages were mixed. The retired codes <code>09001</code>-<code>09015</code>, <code>02261</code>, <code>02270</code>, <code>46113</code> and <code>51515</code> no longer appear anywhere. The crosswalks in particular moved: they used to take the county code from the census-tract attributes, so they shared no Connecticut keys at all with the rest of the package.</p></li>
+<li><p><strong><code>area</code> is rebuilt and now covers all 3,235 counties</strong> (was 3,143, missing the Connecticut planning regions and the renamed Alaska and South Dakota counties). It is derived from the Census <code>ALAND + AWATER</code> fields on the county frame rather than by summing retired 2010 <code>sp</code> tract objects. Land plus water preserves the semantics of the original tract-summed figures; values are unchanged for 92% of counties to within 1%, and within 5% for 98%.</p></li>
+<li><p><strong><code>counties</code> and <code>states</code> gain an <code>AWATER</code> column</strong> (water area in square metres), which <code>area</code> is built from.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-changes-0-3-0">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-0-3-0"></a></h3>
+<ul><li>The HUD PIT series, the CoC boundaries and the Census-to-CoC crosswalk now run through 2025; the crosswalk is built for every year 2007-2025.</li>
+<li>
+<code>county_pit</code>, <code>county_pit_detail</code> and <code>homeless</code> are split on the same primary CoC. They previously each derived their own dominant CoC, which could disagree.</li>
+<li>Build-time guards: the apportionment refuses to run if any county lacks a density weight, refuses to finish if any state has no positive count in a year, and the extractors refuse to drop a CoC-shaped code.</li>
+<li>New tests covering county FIPS vintage consistency, silent-zero detection, CoC reconciliation in both directions, and value plausibility (no negative or missing counts, no county with more homeless residents than residents, no county over its cap, and county-level volatility no worse than the CoC series it derives from) – including a check of the national totals against HUD’s published figures.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="cochomeless-020">COCHomeless 0.2.0<a class="anchor" aria-label="anchor" href="#cochomeless-020"></a></h2>
 <div class="section level3">

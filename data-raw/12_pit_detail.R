@@ -56,25 +56,51 @@ message(sprintf("pit_coc_detail: %s rows, %.1f MB",
 
 ## ---- county_pit_detail: apportion to counties via the crosswalk ------------
 # A county's value for each (shelter, subpopulation) = its apportioned total
-# (from `homeless`) times the dominant CoC's (shelter,subpop)/Overall-All ratio.
+# (from `homeless`) times its primary CoC's (shelter,subpop)/Overall-All ratio.
 load("data/homeless.rda")
 overall <- d |> filter(shelter == "Overall", subpopulation == "All") |>
   transmute(coc_num, year, coc_total = count)
 
+# The county's PRIMARY CoC, from the membership 05_county_estimates.R actually
+# apportioned with -- not a dominant CoC recomputed here from county_coc<year>.
+prim_cache <- "data-raw/downloads/county_primary_coc.rds"
+if (!file.exists(prim_cache))
+  stop("missing ", prim_cache, " -- run data-raw/05_county_estimates.R first")
+primary <- readRDS(prim_cache)
+
+no_profile <- 0L
+
 county_pit_detail <- bind_rows(lapply(2007:2025, function(yr) {
-  load(sprintf("data/county_coc%d.rda", yr)); cc <- get(sprintf("county_coc%d", yr))
-  dom <- cc |> group_by(fips) |> slice_max(w_county, n = 1, with_ties = FALSE) |>
-    ungroup() |> select(fips, COCNUM)
+  dom <- primary |> filter(year == yr) |> select(fips, COCNUM)
   tot <- homeless |> transmute(fips, county_total = .data[[sprintf("count%02d", yr %% 100)]])
-  prof <- d |> filter(year == yr) |>
+  dy <- d |> filter(year == yr)
+  prof <- dy |>
     inner_join(filter(overall, year == yr), by = c("coc_num", "year")) |>
     filter(coc_total > 0) |>
     transmute(COCNUM = coc_num, shelter, subpopulation, frac = count / coc_total)
-  dom |> inner_join(tot, by = "fips") |>
-    inner_join(prof, by = "COCNUM") |>
+
+  # National (shelter x subpopulation) profile, used for counties whose primary
+  # CoC has no detail rows that year. This used to be an inner_join, which
+  # silently dropped those counties from the dataset entirely -- that is how all
+  # nine Connecticut planning regions, plus Wyandotte County KS and Jackson
+  # County MO (whose primary CoC is MO-604), went missing.
+  nat_tot <- sum(filter(overall, year == yr)$coc_total, na.rm = TRUE)
+  nat <- dy |> group_by(shelter, subpopulation) |>
+    summarise(frac = sum(count, na.rm = TRUE) / nat_tot, .groups = "drop")
+
+  have <- unique(prof$COCNUM)
+  keyed <- dom |> inner_join(tot, by = "fips")
+  matched <- keyed |> filter(COCNUM %in% have) |> inner_join(prof, by = "COCNUM")
+  unmatched <- keyed |> filter(!(COCNUM %in% have))
+  no_profile <<- no_profile + nrow(unmatched)
+  filled <- if (nrow(unmatched)) tidyr::crossing(unmatched, nat) else NULL
+
+  bind_rows(matched, filled) |>
     transmute(fips, year = yr, shelter, subpopulation,
               count = as.integer(round(county_total * frac)))
 }))
+
+message(sprintf("  national-profile fallback used for %d county-years", no_profile))
 county_pit_detail$shelter <- factor(county_pit_detail$shelter, levels = shelter_levels)
 county_pit_detail$subpopulation <- factor(county_pit_detail$subpopulation)
 county_pit_detail <- county_pit_detail |> arrange(fips, year, subpopulation, shelter)

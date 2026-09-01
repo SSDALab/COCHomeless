@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,9 +124,9 @@ reconstruct it for each series with an ARIMA model (Kalman smoothing via
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">series</span>, observed_2021 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">series</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="va">pit_us</span><span class="op">[[</span><span class="va">s</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="va">yr</span> <span class="op">==</span> <span class="fl">2021</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>           arima_2021 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">imp</span><span class="op">$</span><span class="va">value</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                  series observed_2021 arima_2021</span></span>
-<span><span class="co">#&gt; total             total        379055     560133</span></span>
-<span><span class="co">#&gt; sheltered     sheltered        325027     288340</span></span>
-<span><span class="co">#&gt; unsheltered unsheltered         54028     227548</span></span></code></pre></div>
+<span><span class="co">#&gt; total             total        380630     561084</span></span>
+<span><span class="co">#&gt; sheltered     sheltered        326126     289456</span></span>
+<span><span class="co">#&gt; unsheltered unsheltered         54504     228220</span></span></code></pre></div>
 <p>A national map of 2024, CoCs shaded by PIT count. Alaska and Hawaii
 are repositioned with <code><a href="https://rdrr.io/pkg/tigris/man/shift_geometry.html" class="external-link">tigris::shift_geometry()</a></code> for a
 compact lower-48 layout:</p>

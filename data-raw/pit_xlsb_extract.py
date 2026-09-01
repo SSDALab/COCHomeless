@@ -7,9 +7,13 @@ Requires: pandas + pyxlsb.
 
 Usage: pit_xlsb_extract.py <input.xlsb> <output.csv>
 """
+import os
 import re
 import sys
 import pandas as pd
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from coc_codes import select_coc_rows
 
 def main(infile, outfile):
     xl = pd.ExcelFile(infile, engine="pyxlsb")
@@ -24,11 +28,12 @@ def main(infile, outfile):
             c for c in df.columns
             if re.fullmatch(r"Overall Homeless(,?\s*\d{4})?", str(c).strip())
         )
-        sub = df[[coc_col, total_col]].copy()
+        # keep only real CoC rows (drop footers / totals / blanks); footnote
+        # markers such as "MO-604a" are normalized, never dropped
+        sub, codes = select_coc_rows(df, coc_col, context=f"sheet {s}")
+        sub = sub[[coc_col, total_col]]
         sub.columns = ["coc_num", "count"]
-        sub["coc_num"] = sub["coc_num"].astype(str).str.strip()
-        # keep only real CoC rows (drop footers / totals / blanks)
-        sub = sub[sub["coc_num"].str.match(r"^[A-Z]{2}-[0-9A-Za-z]{3}$")]
+        sub["coc_num"] = codes
         sub["count"] = pd.to_numeric(sub["count"], errors="coerce")
         sub = sub.dropna(subset=["count"])
         sub["count"] = sub["count"].round().astype(int)

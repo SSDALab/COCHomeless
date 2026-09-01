@@ -13,7 +13,7 @@ estimates (homeless) and with the Census-to-CoC crosswalk."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ estimates (<code><a href="homeless.html">homeless</a></code>) and with the Censu
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
     <p>An <code>sf</code> data frame (CRS EPSG:4269, NAD83) with one row per
-  county and 8 attributes plus geometry:</p><dl><dt>fips</dt>
+  county and 9 attributes plus geometry:</p><dl><dt>fips</dt>
 <dd><p>5-digit county FIPS code.</p></dd>
 
   <dt>STATEFP</dt>
@@ -84,6 +84,9 @@ estimates (<code><a href="homeless.html">homeless</a></code>) and with the Censu
   <dt>ALAND</dt>
 <dd><p>Land area in square meters.</p></dd>
 
+  <dt>AWATER</dt>
+<dd><p>Water area in square meters.</p></dd>
+
   <dt>geometry</dt>
 <dd><p>County boundary polygon.</p></dd>
 
@@ -93,6 +96,19 @@ estimates (<code><a href="homeless.html">homeless</a></code>) and with the Censu
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
     <p>U.S. Census Bureau TIGER/Line cartographic boundary files, via the
   <span class="pkg">tigris</span> package (<a href="https://www.census.gov/geographies/mapping-files.html" class="external-link">https://www.census.gov/geographies/mapping-files.html</a>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>This object defines the <strong>canonical county FIPS vintage</strong> for the whole
+package: <code>area</code>, <code>homeless</code>, <code>homeless_na</code>,
+<code>sp_homeless</code>, <code>county_pit</code>, <code>county_pit_detail</code> and the
+<code>county_coc*</code> / <code>tract_coc*</code> crosswalks are all keyed on it.
+County codes change over time – Connecticut replaced its eight counties
+(09001-09015) with nine planning regions (09110-09190), Alaska split
+Valdez-Cordova into Chugach (02063) and Copper River (02066) and renamed
+Wade Hampton to Kusilvak (02158), and South Dakota renamed Shannon to Oglala
+Lakota (46102) – so joining data built on different vintages returns nothing
+for the affected counties. The frame is pinned to the 2024 TIGER/Line vintage.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

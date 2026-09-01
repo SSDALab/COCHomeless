@@ -2,12 +2,17 @@
 #'
 #' Annual HUD Point-in-Time (PIT) estimates of the total homeless population
 #' ("Overall Homeless") for each Continuum of Care (CoC). One data frame per
-#' year, \code{hud2007} through \code{hud2024}, harmonized from HUD's unified
+#' year, \code{hud2007} through \code{hud2025}, harmonized from HUD's unified
 #' "PIT Counts by CoC" workbook so the CoC coding and count definition are
 #' consistent across the series.
 #'
 #' Note: the 2021 totals are unusually low because HUD waived the unsheltered
 #' count requirement for many CoCs during the COVID-19 pandemic.
+#'
+#' CoC numbers are normalized to the plain \code{"XX-000"} form. HUD marks
+#' footnoted codes with a trailing letter in the source workbook -- Kansas City
+#' appears as \code{"MO-604a"} because the CoC spans Missouri and Kansas -- and
+#' the marker is stripped on import.
 #'
 #' @format A data frame with one row per CoC and 2 variables:
 #' \describe{

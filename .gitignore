@@ -20,3 +20,7 @@ data-raw/downloads/
 
 # internal working notes (not published)
 CLAUDE.md
+
+# Python bytecode
+__pycache__/
+*.pyc

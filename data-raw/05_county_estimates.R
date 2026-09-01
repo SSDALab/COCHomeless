@@ -24,7 +24,10 @@
 
 suppressMessages({
   library(sf); library(dplyr); library(tidyr); library(tidycensus); library(mgcv)
+  library(tigris)
 })
+options(tigris_use_cache = TRUE, tigris_class = "sf")
+source("data-raw/00_geo_helpers.R")   # EQ, prep_tracts(), add_county_fips()
 sf_use_s2(FALSE)
 stopifnot(dir.exists("data"))
 YEARS <- 2007:2025
@@ -40,12 +43,59 @@ geo <- data.frame(fips = counties$fips, state = substr(counties$fips, 1, 2),
                   lon = cents[, 1], lat = cents[, 2], stringsAsFactors = FALSE)
 
 ## ---- 2010 Census population (density benchmark) -----------------------------
-pop2010 <- get_decennial("county", variables = "P001001", year = 2010,
-                         geometry = FALSE, progress_bar = FALSE) |>
-  transmute(fips = GEOID, pop2010 = value)
+# Pulled at TRACT level and aggregated onto the canonical county frame, rather
+# than taken as county totals. `get_decennial("county", year = 2010)` is keyed on
+# the 2010 county vintage, which has no Connecticut planning regions, no Chugach
+# / Copper River / Kusilvak and no Oglala Lakota. Joining those county totals to
+# the modern frame left 13 counties with pop2010 = NA; they were then dropped by
+# the density filter below, skipped by the imputation guard, and written out as
+# zeros -- every Connecticut county read 0 in every year. 2010 tracts nest inside
+# the modern counties, so assigning each tract by its interior point gives a
+# vintage-independent benchmark.
+pop_cache <- file.path("data-raw/downloads", "pop2010_county.rds")
+if (file.exists(pop_cache)) {
+  pop2010 <- readRDS(pop_cache)
+} else {
+  message("pulling 2010 decennial population at tract level ...")
+  st_list <- sort(unique(counties$STATEFP))
+  tr_pop <- bind_rows(lapply(st_list, function(s)
+    tryCatch(get_decennial("tract", variables = "P001001", year = 2010,
+                           state = s, geometry = FALSE, progress_bar = FALSE),
+             error = function(e) NULL))) |>
+    transmute(GEOID, pop = value)
+
+  # Tract geometry must be the SAME 2010 vintage as the population table: a
+  # tract GEOID embeds its county code, so 2010 tracts in Wade Hampton AK and
+  # Shannon SD are keyed 02270.../46113..., while the 2019 shapefile keys the
+  # same ground as 02158.../46102.... Joining across vintages loses exactly
+  # those counties (the build guard below catches it).
+  tr <- bind_rows(lapply(st_list, function(s)
+    tryCatch(tigris::tracts(state = s, year = 2010, cb = TRUE,
+                            progress_bar = FALSE),
+             error = function(e) NULL)))
+  tr$GEOID <- if ("GEOID10" %in% names(tr)) tr$GEOID10 else
+              paste0(tr$STATE, tr$COUNTY, tr$TRACT)
+  tr <- tr[, "GEOID"] |> st_transform(EQ) |> st_make_valid()
+  map <- tract_county_fips(tr, counties,
+                           cache = file.path("data-raw/downloads",
+                                             "tract2010v_county.rds"))
+
+  pop2010 <- tr_pop |> left_join(map, by = "GEOID") |>
+    filter(!is.na(fips)) |>
+    group_by(fips) |> summarise(pop2010 = sum(pop, na.rm = TRUE), .groups = "drop")
+  saveRDS(pop2010, pop_cache)
+}
 
 dens <- geo |> left_join(pop2010, by = "fips") |> left_join(area, by = "fips") |>
   mutate(D = pop2010 / skm)
+
+# The guard whose absence let Connecticut ship as zeros: every county in the
+# frame must have a usable density weight before any apportionment happens.
+bad <- dens$fips[is.na(dens$D) | !is.finite(dens$D)]
+if (length(bad))
+  stop("no density weight for ", length(bad), " counties: ",
+       paste(head(bad, 20), collapse = ", "),
+       "\n  -> county FIPS vintage mismatch between counties/area/pop2010")
 
 ## ---- plausibility caps (metro-aware) ---------------------------------------
 # Max homeless per county = cap_rate * ACS population. New York City's boroughs
@@ -62,6 +112,60 @@ pop_acs <- get_acs("county", variables = "B01003_001", year = ACS_END,
 caps <- data.frame(fips = geo$fips) |> left_join(pop_acs, by = "fips") |>
   mutate(cap = ifelse(is.na(pop_acs), Inf, cap_rate_for(fips) * pop_acs))
 cap_by_fips <- setNames(caps$cap, caps$fips)
+
+## ---- bi-state CoC splits from HUD's published by-state totals ---------------
+# MO-604 (Kansas City) covers territory in both Missouri and Kansas. HUD's
+# by-CoC workbook reports it as one combined row coded to Missouri; HUD's
+# by-State workbook reports the two portions separately. Without the split, the
+# density weighting hands dense Wyandotte County KS a large share of the whole
+# CoC, pushing Kansas roughly 29% above its officially reported state total.
+#
+# The split is derived, not hardcoded: for each state, the residual between
+# HUD's published state total and the sum of the CoCs coded to that state is the
+# portion contributed by a CoC coded elsewhere. Only Kansas/Missouri show a
+# residual in any year, and the residuals net to zero nationally.
+state_csv <- "data-raw/downloads/pit_by_state.csv"
+if (!file.exists(state_csv)) {
+  xlsb <- "data-raw/downloads/PIT-by-State.xlsb"
+  if (!file.exists(xlsb)) {
+    ua  <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15"
+    ref <- paste0("https://www.huduser.gov/portal/datasets/ahar/",
+                  "2025-ahar-part-1-pit-estimates-of-homelessness-in-the-us.html")
+    system(sprintf("curl -sL --max-time 300 -A %s -H %s -o %s %s",
+                   shQuote(ua), shQuote(paste0("Referer: ", ref)), shQuote(xlsb),
+                   shQuote(paste0("https://www.huduser.gov/portal/sites/default/",
+                                  "files/xls/2007-2025-PIT-Counts-by-State.xlsb"))))
+  }
+  system2(Sys.which("python3"),
+          c("data-raw/pit_state_extract.py", shQuote(xlsb), shQuote(state_csv)))
+}
+hud_state <- utils::read.csv(state_csv)
+usps <- setNames(counties$STUSPS, counties$STATEFP)
+
+state_split <- function(yr, hud) {
+  own <- tapply(hud$count, substr(as.character(hud$coc_num), 1, 2), sum)
+  hs <- hud_state[hud_state$year == yr, ]
+  resid <- setNames(hs$total - ifelse(is.na(own[hs$state]), 0, own[hs$state]), hs$state)
+  hosts <- names(resid)[!is.na(resid) & resid > 0]
+  if (!length(hosts)) return(NULL)
+  cc <- local({ load(sprintf("data/county_coc%d.rda", yr))
+                get(sprintf("county_coc%d", yr)) })
+  cc$ST <- usps[substr(cc$fips, 1, 2)]
+  out <- NULL
+  for (s in hosts) {
+    cand <- cc[!is.na(cc$ST) & cc$ST == s & substr(cc$COCNUM, 1, 2) != s, ]
+    if (!nrow(cand)) next
+    a <- tapply(cand$area_m2, cand$COCNUM, sum)
+    coc <- names(a)[which.max(a)]
+    tot <- hud$count[as.character(hud$coc_num) == coc]
+    if (!length(tot)) next
+    out <- rbind(out,
+                 data.frame(COCNUM = coc, ST = s, cnt = resid[[s]]),
+                 data.frame(COCNUM = coc, ST = substr(coc, 1, 2),
+                            cnt = tot - resid[[s]]))
+  }
+  out
+}
 
 ## ---- largest-remainder rounding that preserves a group total ----------------
 round_preserve <- function(x) {
@@ -118,30 +222,53 @@ allocate_year <- function(yr) {
 
   membership <- bind_rows(dom, orphan_assign) |> distinct(fips, COCNUM)
 
+  # Each county's PRIMARY CoC, exported so that 10_county_pit.R and
+  # 12_pit_detail.R split the same county the same way. They used to recompute a
+  # dominant CoC of their own from county_coc<year>$w_county, which could pick a
+  # different CoC than the one the count was actually apportioned from.
+  primary <<- bind_rows(primary, mutate(dom, year = yr))
+
   # Within each CoC, split its PIT count among member counties by population
   # density (paper's volume-preserving estimator), water-filling so no county
   # exceeds its cap and the excess flows to counties with headroom.
+  # For a CoC that HUD reports split across states, allocate each state's
+  # published portion within that state's member counties only.
+  spl <- state_split(yr, hud)
+
   membership |>
     left_join(dens[, c("fips", "D")], by = "fips") |>
     left_join(caps[, c("fips", "cap")], by = "fips") |>
     filter(!is.na(D), D > 0) |>
     left_join(hud, by = c("COCNUM" = "coc_num")) |>
     filter(!is.na(count)) |>
-    group_by(COCNUM) |>
-    group_modify(~ { .x$cnt <- round_preserve(water_fill(.x$count[1], .x$D, .x$cap)); .x }) |>
+    mutate(ST = usps[substr(fips, 1, 2)]) |>
+    (\(d) {
+      if (is.null(spl)) { d$grp <- "ALL"; d$grp_count <- d$count; return(d) }
+      d <- left_join(d, spl, by = c("COCNUM", "ST"))
+      split_coc <- unique(spl$COCNUM)
+      d$grp <- ifelse(d$COCNUM %in% split_coc, d$ST, "ALL")
+      d$grp_count <- ifelse(d$COCNUM %in% split_coc, d$cnt, d$count)
+      # a split CoC may touch a state HUD assigns no portion to; drop those
+      d[!is.na(d$grp_count), ]
+    })() |>
+    group_by(COCNUM, grp) |>
+    group_modify(~ { .x$cnt <- round_preserve(water_fill(.x$grp_count[1], .x$D, .x$cap)); .x }) |>
     ungroup() |>
     group_by(fips) |> summarise(count = sum(cnt), .groups = "drop") |>
     mutate(year = yr)
 }
 
 panel_cache <- "data-raw/downloads/county_panel.rds"
-if (file.exists(panel_cache)) {
+prim_cache  <- "data-raw/downloads/county_primary_coc.rds"
+primary <- NULL
+if (file.exists(panel_cache) && file.exists(prim_cache)) {
   message("loading cached apportionment panel")
   panel <- readRDS(panel_cache)
 } else {
   message("apportioning ", length(YEARS), " years ...")
   panel <- bind_rows(lapply(YEARS, function(y) { message("  ", y); allocate_year(y) }))
   saveRDS(panel, panel_cache)
+  saveRDS(primary, prim_cache)
 }
 
 ## ---- wide county x year, with NA where a county had no CoC that year --------

@@ -2,7 +2,7 @@
 
 Annual HUD Point-in-Time (PIT) estimates of the total homeless
 population ("Overall Homeless") for each Continuum of Care (CoC). One
-data frame per year, `hud2007` through `hud2024`, harmonized from HUD's
+data frame per year, `hud2007` through `hud2025`, harmonized from HUD's
 unified "PIT Counts by CoC" workbook so the CoC coding and count
 definition are consistent across the series.
 
@@ -60,23 +60,21 @@ A data frame with one row per CoC and 2 variables:
 
   Overall Homeless PIT count for the year (integer).
 
-An object of class `data.frame` with 389 rows and 2 columns.
-
-An object of class `data.frame` with 390 rows and 2 columns.
-
 An object of class `data.frame` with 390 rows and 2 columns.
 
 An object of class `data.frame` with 391 rows and 2 columns.
 
-An object of class `data.frame` with 390 rows and 2 columns.
+An object of class `data.frame` with 391 rows and 2 columns.
+
+An object of class `data.frame` with 392 rows and 2 columns.
 
 An object of class `data.frame` with 391 rows and 2 columns.
 
-An object of class `data.frame` with 390 rows and 2 columns.
+An object of class `data.frame` with 392 rows and 2 columns.
 
-An object of class `data.frame` with 394 rows and 2 columns.
+An object of class `data.frame` with 391 rows and 2 columns.
 
-An object of class `data.frame` with 393 rows and 2 columns.
+An object of class `data.frame` with 395 rows and 2 columns.
 
 An object of class `data.frame` with 394 rows and 2 columns.
 
@@ -84,17 +82,19 @@ An object of class `data.frame` with 395 rows and 2 columns.
 
 An object of class `data.frame` with 396 rows and 2 columns.
 
-An object of class `data.frame` with 391 rows and 2 columns.
+An object of class `data.frame` with 397 rows and 2 columns.
 
-An object of class `data.frame` with 386 rows and 2 columns.
+An object of class `data.frame` with 392 rows and 2 columns.
 
-An object of class `data.frame` with 386 rows and 2 columns.
+An object of class `data.frame` with 387 rows and 2 columns.
 
-An object of class `data.frame` with 384 rows and 2 columns.
-
-An object of class `data.frame` with 384 rows and 2 columns.
+An object of class `data.frame` with 387 rows and 2 columns.
 
 An object of class `data.frame` with 385 rows and 2 columns.
+
+An object of class `data.frame` with 385 rows and 2 columns.
+
+An object of class `data.frame` with 386 rows and 2 columns.
 
 ## Source
 
@@ -106,3 +106,8 @@ HUD, Annual Homeless Assessment Report (AHAR) Part 1, PIT estimates:
 Note: the 2021 totals are unusually low because HUD waived the
 unsheltered count requirement for many CoCs during the COVID-19
 pandemic.
+
+CoC numbers are normalized to the plain `"XX-000"` form. HUD marks
+footnoted codes with a trailing letter in the source workbook – Kansas
+City appears as `"MO-604a"` because the CoC spans Missouri and Kansas –
+and the marker is stripped on import.

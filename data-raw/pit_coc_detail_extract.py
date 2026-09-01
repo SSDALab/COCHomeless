@@ -4,8 +4,11 @@ HUD PIT-by-CoC workbook. Each count column ("<shelter> Homeless <subpop>") is
 melted into rows: coc_num, year, shelter, subpopulation, count.
 Usage: pit_coc_detail_extract.py <input.xlsb> <output.csv>   (pandas + pyxlsb)
 """
-import re, sys
+import os, re, sys
 import pandas as pd
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from coc_codes import select_coc_rows
 
 infile, outfile = sys.argv[1], sys.argv[2]
 xl = pd.ExcelFile(infile, engine="pyxlsb")
@@ -27,8 +30,8 @@ rows = []
 for s in [s for s in xl.sheet_names if re.fullmatch(r"\d{4}", str(s))]:
     df = pd.read_excel(xl, sheet_name=s)
     coc = next(c for c in df.columns if "CoC Number" in str(c))
-    valid = df[df[coc].astype(str).str.match(r"^[A-Z]{2}-[0-9A-Za-z]{3}$")].copy()
-    valid["coc_num"] = valid[coc].astype(str).str.strip()
+    valid, codes = select_coc_rows(df, coc, context=f"sheet {s}")
+    valid["coc_num"] = codes
     for col in df.columns:
         p = parse(str(col).strip())
         if p is None:

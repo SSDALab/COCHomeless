@@ -69,9 +69,9 @@ ggplot(obs, aes(year, value, color = series)) +
 data.frame(series, observed_2021 = sapply(series, function(s) pit_us[[s]][yr == 2021]),
            arima_2021 = round(imp$value))
 #>                  series observed_2021 arima_2021
-#> total             total        379055     560133
-#> sheltered     sheltered        325027     288340
-#> unsheltered unsheltered         54028     227548
+#> total             total        380630     561084
+#> sheltered     sheltered        326126     289456
+#> unsheltered unsheltered         54504     228220
 ```
 
 A national map of 2024, CoCs shaded by PIT count. Alaska and Hawaii are

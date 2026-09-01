@@ -14,31 +14,36 @@
 # 2020-census tracts (tigris) for 2020-2025. Each year's tracts are matched
 # against that year's CoC boundaries (the package coc<year> sf objects).
 #
+# County keys (`fips`) are NOT taken from the tract attributes: tract shapefiles
+# carry the county code of their own vintage, which is why the crosswalk used to
+# key Connecticut on the retired counties 09001-09015 while the rest of the
+# package used the planning regions 09110-09190, so the two families shared no CT
+# keys at all. Every tract is instead assigned to the county containing its
+# interior point on the canonical `counties` frame (see 00_geo_helpers.R).
+#
 # Crosswalk procedure due to Tom Byrne; see
 # https://github.com/tomhbyrne/HUD-CoC-Geography-Crosswalk
 # Run from the package root. Requires CENSUS_API_KEY in ~/.Renviron (tigris).
 ################################################################################
 
 suppressMessages({ library(sf); library(dplyr); library(tigris) })
+source("data-raw/00_geo_helpers.R")   # EQ, prep_tracts(), add_county_fips()
 sf_use_s2(FALSE)
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 stopifnot(dir.exists("data"))
-EQ <- 5070L
 dl <- "data-raw/downloads"; dir.create(dl, showWarnings = FALSE, recursive = TRUE)
 
-prep_tracts <- function(x) {
-  x |> st_transform(EQ) |> st_make_valid() |>
-    transmute(STATEFP, COUNTYFP, TRACTCE, GEOID,
-              fips = paste0(STATEFP, COUNTYFP))
-}
+load("data/counties.rda")   # canonical county frame
 
 ## ---- 2010-census tracts (IPUMS NHGIS) --------------------------------------
 nhgis <- Sys.getenv("NHGIS_TRACTS_2019", paste0(
   "~/Documents/back-up-oldMP/Back_up/github/SSDALab/World_Widd_Homelessness/",
   "CoC_Crosswalk/data/nhgis0013_shape/nhgis0013_shapefile_tl2019_us_tract_2019/",
   "US_tract_2019.shp"))
-tracts2010 <- prep_tracts(st_read(path.expand(nhgis), quiet = TRUE))
-message("2010-vintage tracts: ", nrow(tracts2010))
+tracts2010 <- prep_tracts(st_read(path.expand(nhgis), quiet = TRUE)) |>
+  add_county_fips(counties, cache = file.path(dl, "tract2010_county.rds"))
+message("2010-vintage tracts: ", nrow(tracts2010),
+        " (unmatched to a county: ", sum(is.na(tracts2010$fips)), ")")
 
 ## ---- 2020-census tracts (tigris, national, cached; loaded on first need) ----
 .tracts2020 <- NULL
@@ -48,14 +53,16 @@ get_tracts2020 <- function() {
   if (file.exists(t2020_cache)) {
     t <- readRDS(t2020_cache)
   } else {
-    st_fips <- sort(union(unique(substr(tracts2010$fips, 1, 2)), c("02","15","72")))
+    st_fips <- sort(union(unique(tracts2010$STATEFP), c("02","15","72")))
     parts <- lapply(st_fips, function(s)
       tryCatch(tracts(state = s, year = 2020, cb = TRUE, progress_bar = FALSE),
                error = function(e) NULL))
     t <- prep_tracts(do.call(rbind, Filter(Negate(is.null), parts)))
     saveRDS(t, t2020_cache)
   }
-  message("2020-vintage tracts: ", nrow(t))
+  t <- add_county_fips(t, counties, cache = file.path(dl, "tract2020_county.rds"))
+  message("2020-vintage tracts: ", nrow(t),
+          " (unmatched to a county: ", sum(is.na(t$fips)), ")")
   .tracts2020 <<- t; t
 }
 
@@ -83,7 +90,13 @@ build_year <- function(yr) {
     group_by(GEOID) |> mutate(w_tract = w_tract / sum(w_tract)) |> ungroup() |>
     select(GEOID, fips, COCNUM, COCNAME, w_tract)
 
+  # A county weight with no county is meaningless, and leaving those pieces in
+  # would make w_coc sum to 1 only after counting unattributable area. Tracts
+  # whose interior point falls outside every county (offshore water tracts) are
+  # dropped here; they are still present, with fips = NA, in the tract-level
+  # outputs, where the tract itself is a real unit.
   wt_county <- inter |>
+    filter(!is.na(fips)) |>
     group_by(fips, COCNUM, COCNAME) |>
     summarise(area_m2 = sum(piece_area), .groups = "drop") |>
     group_by(COCNUM) |> mutate(w_coc = area_m2 / sum(area_m2)) |> ungroup() |>

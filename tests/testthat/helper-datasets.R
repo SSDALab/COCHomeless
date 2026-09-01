@@ -60,3 +60,34 @@ expect_mostly_coc <- function(ids, frac = 0.97, label = "") {
                     label, paste(utils::head(unique(ids[!ok]), 5), collapse = ", "))
   )
 }
+
+# ---- county FIPS vintage ----------------------------------------------------
+# County FIPS codes are not stable. Connecticut replaced its eight counties with
+# nine planning regions, Alaska split Valdez-Cordova and renamed Wade Hampton,
+# and South Dakota renamed Shannon. The package pins ONE vintage (see
+# data-raw/07_base_geography.R); mixing vintages silently empties joins, which is
+# how every Connecticut county came to read 0 in every year.
+
+# Codes retired before the pinned vintage. None may appear in any dataset.
+RETIRED_FIPS <- c(
+  sprintf("090%02d", c(1, 3, 5, 7, 9, 11, 13, 15)),  # CT counties -> planning regions
+  "02261",   # Valdez-Cordova -> Chugach (02063) + Copper River (02066)
+  "02270",   # Wade Hampton   -> Kusilvak (02158)
+  "46113",   # Shannon        -> Oglala Lakota (46102)
+  "51515"    # Bedford city   -> merged into Bedford County (51019)
+)
+
+# Codes introduced with the pinned vintage. All must be present.
+CURRENT_FIPS <- c(sprintf("091%d0", 1:9), "02063", "02066", "02158", "46102")
+
+# County FIPS carried by a dataset, whatever shape it is.
+county_fips <- function(x) {
+  if (inherits(x, "sf")) x <- sf::st_drop_geometry(x)
+  unique(stats::na.omit(as.character(x[["fips"]])))
+}
+
+# US territories. The county estimates cover the 50 states + DC only, matching
+# the frame of Almquist, Helwig and You (2020), so territories are expected to be
+# absent from the county-level families.
+TERRITORY_STATEFP <- c("60", "66", "69", "72", "74", "78")
+is_territory <- function(fips) substr(fips, 1, 2) %in% TERRITORY_STATEFP

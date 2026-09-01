@@ -3,7 +3,7 @@
 ## All functions
 
 - [`area`](https://ssdalab.github.io/COCHomeless/reference/area.md) :
-  Area for all U.S. counties by FIPS code (excluding U.S. territories)
+  Area for all U.S. counties and county equivalents
 - [`coc2007`](https://ssdalab.github.io/COCHomeless/reference/coc.md)
   [`coc2008`](https://ssdalab.github.io/COCHomeless/reference/coc.md)
   [`coc2009`](https://ssdalab.github.io/COCHomeless/reference/coc.md)
