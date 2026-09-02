@@ -42,7 +42,7 @@ crosswalk help pages
 
 Useful links:
 
-- <https://ssdalab.github.io/COCHomeless>
+- <https://ssdalab.github.io/COCHomeless/>
 
 - <https://github.com/SSDALab/COCHomeless>
 

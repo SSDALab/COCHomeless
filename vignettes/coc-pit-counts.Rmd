@@ -21,9 +21,9 @@ have_arima <- requireNamespace("imputeTS", quietly = TRUE) &&
 library(COCHomeless)
 ```
 
-The `hud2007`--`hud2024` data frames hold HUD's annual Point-in-Time (PIT)
+The `hud2007`--`hud2025` data frames hold HUD's annual Point-in-Time (PIT)
 estimate of the total ("Overall Homeless") population for each Continuum of Care
-(CoC). The `coc2007`--`coc2024` objects hold the matching CoC boundaries as
+(CoC). The `coc2007`--`coc2025` objects hold the matching CoC boundaries as
 `sf` polygons.
 
 ## National overview
@@ -35,7 +35,7 @@ years <- 2007:2025
 totals <- sapply(years, function(y) sum(get(paste0("hud", y))$count))
 plot(years, totals / 1e6, type = "b", pch = 19,
      xlab = "Year", ylab = "Total PIT homeless (millions)",
-     main = "U.S. Point-in-Time homeless counts, 2007-2024")
+     main = "U.S. Point-in-Time homeless counts, 2007-2025")
 ```
 
 The 2021 dip reflects HUD's pandemic waiver of the unsheltered count for many
@@ -134,7 +134,7 @@ state_map <- function(st, title) {
     scale_fill_viridis_c(trans = "log10", name = "PIT", labels = scales::comma) +
     labs(title = title) + theme_void()
 }
-# per-CoC time series 2007-2024 for a set of CoC numbers
+# per-CoC time series 2007-2025 for a set of CoC numbers
 coc_series <- function(coc_nums) {
   do.call(rbind, lapply(coc_nums, function(cc) data.frame(
     year = years, COCNUM = cc,
@@ -157,7 +157,7 @@ ca_top <- top_cocs("CA")
 ggplot(coc_series(ca_top$COCNUM), aes(year, count, color = COCNUM)) +
   geom_line(linewidth = 0.9) + geom_point(size = 1.3) +
   scale_color_discrete(labels = setNames(substr(ca_top$COCNAME, 1, 28), ca_top$COCNUM)) +
-  labs(title = "California: largest CoCs, 2007-2024", y = "PIT homeless",
+  labs(title = "California: largest CoCs, 2007-2025", y = "PIT homeless",
        color = NULL) + theme_minimal()
 ```
 
@@ -174,7 +174,7 @@ wa_top <- top_cocs("WA")
 ggplot(coc_series(wa_top$COCNUM), aes(year, count, color = COCNUM)) +
   geom_line(linewidth = 0.9) + geom_point(size = 1.3) +
   scale_color_discrete(labels = setNames(substr(wa_top$COCNAME, 1, 28), wa_top$COCNUM)) +
-  labs(title = "Washington: largest CoCs, 2007-2024", y = "PIT homeless",
+  labs(title = "Washington: largest CoCs, 2007-2025", y = "PIT homeless",
        color = NULL) + theme_minimal()
 ```
 
