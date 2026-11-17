@@ -8,3 +8,5 @@
 ^vignettes/figure$
 ^docs$
 ^_pkgdown\.yml$
+^BUGS\.md$
+^TESTING\.md$

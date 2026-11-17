@@ -13,8 +13,9 @@ xlsb <- "data-raw/downloads/PIT-by-CoC.xlsb"
 csv  <- "data-raw/downloads/pit_us.csv"
 if (!file.exists(xlsb)) stop("run 02_hud_pit.R first")
 
-py <- Sys.which("python3"); if (py == "") stop("python3 + pandas + pyxlsb required")
-system2(py, c("data-raw/pit_us_extract.py", shQuote(xlsb), shQuote(csv)))
+source("data-raw/00_build_helpers.R")
+run_extractor(Sys.which("python3"), c("data-raw/pit_us_extract.py", shQuote(xlsb), shQuote(csv)),
+              out = csv, src = xlsb)   # BUG-015: never continue on a stale CSV
 
 pit_us <- utils::read.csv(csv)
 pit_us[c("year", "total", "sheltered", "unsheltered")] <-

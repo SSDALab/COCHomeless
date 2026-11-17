@@ -1,3 +1,91 @@
+# COCHomeless 0.4.0
+
+## Data corrections
+
+Three more allocation defects let people be lost or misplaced between a CoC's
+PIT count and the county estimates. They were found by checking, CoC by CoC,
+that every reported person reaches a county. County estimates change for 4,309
+county-years (7.2%) in 1,091 counties, almost all before 2019; re-run analyses
+built on 0.3.0 county data. CoC and national PIT figures are unchanged. Each
+defect is in the new bug registry (`BUGS.md`) with its regression tests.
+
+* **CoCs missing from a year's HUD boundary file had their whole count dropped
+  (BUG-008).** HUD's yearly boundary files omit some CoCs that reported a PIT
+  count: 53 CoC-years and 21,906 people, for example CA-524 (Yuba/Sutter)
+  2009-2012, LA-509 2007-2014 and five Maryland CoCs in 2020. Those people
+  reached no county. The imputed panel hid the loss, because the uncovered
+  counties were filled by the model. The nearest year's polygon is now
+  borrowed; `county_coc_alloc$boundary_year` records which year was used.
+
+* **A county could draw its count from a CoC that only slivered into it
+  (BUG-009).** When HUD's file left a county uncovered, a neighbouring CoC's
+  boundary sliver became its "primary" CoC. Sutter County, CA drew on Yolo
+  County's CoC (CA-521) for 2009-2012 through a 6 km^2 overlap, which produced
+  the 485% jump from 2012 to 2013 when the boundary was repaired. A primary CoC
+  must now cover at least 1% of the county. Counties that HUD's boundaries do
+  not cover are imputed, as in Almquist, Helwig and You (2020).
+
+* **Kansas City's Kansas portion was charged to the wrong CoC before 2016
+  (BUG-010).** The bi-state split charged Kansas's residual to the out-of-state
+  CoC with the largest overlap. HUD's pre-2016 files draw MO-604 barely into
+  Kansas, so slivers of OK-503, MO-603 or MO-606 won instead. Oklahoma's
+  balance-of-state CoC lost 1,981 people over 2007-2015, falling to zero in
+  some years. The bi-state CoC is now identified from the latest boundary file
+  and held fixed.
+
+* **Counties with no CoC in any year were dropped from `county_pit_detail`
+  (BUG-014)**, for example Baker County, FL. They now use the national
+  profile.
+
+With these fixed, county estimates before imputation reproduce every CoC's HUD
+count exactly in every year, and HUD's published state totals exactly in 86% of
+state-years. The rest is within 3.2%, all from CoCs that cross state lines.
+
+## New data
+
+* **Flagged imputation of the 2021 unsheltered count.** HUD's COVID-19 waiver
+  left 159 CoCs reporting 0 unsheltered people in 2021. `pit_coc`, `county_pit`
+  and `pit_us` gain `unsheltered_imp`, `total_imp` and an imputation flag:
+  - The estimate is a once-differenced ARIMA on `log(1 + unsheltered)` with
+    Kalman smoothing.
+  - It adds 172,025 people nationally, putting 2021 unsheltered at 226,529
+    against 226,080 in 2020 and 233,832 in 2022.
+  - In a holdout test it is 3-4% low in total, with a 15-17% median error per
+    CoC.
+  - HUD's official columns are unchanged.
+  - Documented in the new vignette `vignette("unsheltered-imputation")` and on
+    each object as `attr(x, "note")`.
+* **`county_coc_alloc`**: every county estimate traced to its sources. Each row
+  gives a county, a year, a contributing CoC, how many people that CoC
+  contributed, the CoC's role (primary / nested / bi-state), its area coverage
+  and the HUD boundary year used.
+
+## Testing and quality control
+
+* A formal testing layer, described in `TESTING.md`:
+  - unit tests for the build logic, which now lives in
+    `data-raw/00_build_helpers.R`;
+  - allocation QC: per-CoC conservation, boundary gaps, sliver assignments,
+    and a cause for every extreme county year-over-year swing;
+  - a running bug registry (`tests/testthat/fixtures/bug_registry.csv`, shown
+    as `BUGS.md`) with meta-tests requiring a tagged regression test for every
+    fixed bug.
+* `data-raw/13_qc_report.R` writes the flagged rows after each rebuild.
+* New build guards: the apportionment stops if any CoC's count is not fully
+  placed or a bi-state split goes negative. ACS pulls are cached and retried
+  (BUG-013).
+* A data contract (`test-data-contract.R`): every shipped column keeps its
+  name and type against the snapshot in `tests/testthat/fixtures/schema.csv`;
+  long panels have one row per key; `sp_homeless` carries exactly the counts in
+  `homeless`. 0.4.0 passes the contract taken from 0.3.0, so no column was
+  removed or retyped.
+* `data-raw/15_release_diff.R` reports what a rebuild changed against the last
+  release. A clean rebuild from scratch reproduces all 109 datasets exactly.
+* The `.xlsb` extractors no longer fail silently (BUG-015): a failed extraction
+  stops the build unless the cached CSV is newer than its workbook.
+* `homeless` and `homeless_na` rows are now sorted by `fips` (previously in
+  join order). Values are unchanged.
+
 # COCHomeless 0.3.0
 
 ## Data corrections

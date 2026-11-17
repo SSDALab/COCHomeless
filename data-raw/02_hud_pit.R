@@ -37,10 +37,9 @@ if (!file.exists(xlsb)) {
 }
 
 ## ---- extract to tidy CSV via Python helper ---------------------------------
-py <- Sys.which("python3")
-if (py == "") stop("python3 with pandas + pyxlsb is required to read .xlsb")
-status <- system2(py, c("data-raw/pit_xlsb_extract.py", shQuote(xlsb), shQuote(csv)))
-if (status != 0 || !file.exists(csv)) stop("xlsb extraction failed")
+source("data-raw/00_build_helpers.R")
+run_extractor(Sys.which("python3"), c("data-raw/pit_xlsb_extract.py", shQuote(xlsb), shQuote(csv)),
+              out = csv, src = xlsb)
 
 ## ---- build one data.frame per year -----------------------------------------
 long <- utils::read.csv(csv, colClasses = c(year = "integer",

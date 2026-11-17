@@ -41,7 +41,7 @@ test_that("current-vintage county FIPS are present in every county family", {
   }
 })
 
-test_that("Connecticut is keyed on the nine planning regions everywhere", {
+test_that("[BUG-002] Connecticut is keyed on the nine planning regions everywhere", {
   ct_expected <- sprintf("091%d0", 1:9)
   for (nm in county_families()) {
     ct <- grep("^09", county_fips(get_dataset(nm)), value = TRUE)

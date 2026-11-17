@@ -17,10 +17,9 @@ xlsb <- file.path(dl_dir, "PIT-by-CoC.xlsb")
 csv  <- file.path(dl_dir, "coc_mergers_raw.csv")
 if (!file.exists(xlsb)) stop("run 02_hud_pit.R first to download the workbook")
 
-py <- Sys.which("python3")
-if (py == "") stop("python3 with pandas + pyxlsb is required")
-system2(py, c("data-raw/xlsb_sheet_to_csv.py", shQuote(xlsb),
-              shQuote("CoC Mergers"), shQuote(csv)))
+source("data-raw/00_build_helpers.R")
+run_extractor(Sys.which("python3"), c("data-raw/xlsb_sheet_to_csv.py", shQuote(xlsb),
+              shQuote("CoC Mergers"), shQuote(csv)), out = csv, src = xlsb)
 
 raw <- utils::read.csv(csv, check.names = FALSE)
 names(raw) <- c("coc_pre", "coc_post", "merger_year")

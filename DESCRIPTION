@@ -1,7 +1,7 @@
 Package: COCHomeless
 Type: Package
 Title: Datasets and Spatial Tools for United States Homelessness Research
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: c(
     person("Zack W.", "Almquist", role = c("aut", "cre"),
            email = "zalmquist@uw.edu",

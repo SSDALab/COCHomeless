@@ -51,7 +51,7 @@ test_that("every state has homeless counts in every year", {
                                      sep = "/", collapse = ", ")))
 })
 
-test_that("Connecticut planning regions carry non-zero counts", {
+test_that("[BUG-002] Connecticut planning regions carry non-zero counts", {
   ct <- county_pit[substr(county_pit$fips, 1, 2) == "09", ]
   expect_equal(length(unique(ct$fips)), 9)
   by_year <- tapply(ct$total, ct$year, sum)
@@ -65,12 +65,12 @@ test_that("Connecticut planning regions carry non-zero counts", {
   expect_equal(unname(by_year[yrs]), unname(coc_tot[yrs]))
 })
 
-test_that("county_pit and county_pit_detail cover the same counties", {
+test_that("[BUG-003] [BUG-014] county_pit and county_pit_detail cover the same counties", {
   expect_identical(sort(unique(county_pit$fips)),
                    sort(unique(as.character(county_pit_detail$fips))))
 })
 
-test_that("counties whose primary CoC lacks a detail profile are still present", {
+test_that("[BUG-003] counties whose primary CoC lacks a detail profile are still present", {
   # Wyandotte County KS and Jackson County MO both sit in MO-604 (Kansas City).
   # An inner join on the CoC detail profile used to drop them outright.
   for (f in c("20209", "29095")) {

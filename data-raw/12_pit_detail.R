@@ -13,6 +13,7 @@
 ################################################################################
 
 suppressMessages({ library(dplyr); library(tidyr) })
+source("data-raw/00_build_helpers.R")   # run_extractor
 stopifnot(dir.exists("data"))
 
 shelter_levels <- c("Overall", "Sheltered Total", "Sheltered ES",
@@ -27,8 +28,9 @@ d <- utils::read.csv("data-raw/downloads/pit_coc_detail.csv",
 gen_csv  <- "data-raw/downloads/pit_detail_2024file.csv"
 gen_xlsb <- "data-raw/downloads/PIT-by-CoC-2024.xlsb"   # 2007-2024 workbook
 if (!file.exists(gen_csv) && file.exists(gen_xlsb)) {
-  system2(Sys.which("python3"),
-          c("data-raw/pit_coc_detail_extract.py", shQuote(gen_xlsb), shQuote(gen_csv)))
+  run_extractor(Sys.which("python3"),
+                c("data-raw/pit_coc_detail_extract.py", shQuote(gen_xlsb), shQuote(gen_csv)),
+                out = gen_csv, src = gen_xlsb)
 }
 if (file.exists(gen_csv)) {
   g <- utils::read.csv(gen_csv, colClasses = c(coc_num = "character"))
@@ -89,7 +91,10 @@ county_pit_detail <- bind_rows(lapply(2007:2025, function(yr) {
     summarise(frac = sum(count, na.rm = TRUE) / nat_tot, .groups = "drop")
 
   have <- unique(prof$COCNUM)
-  keyed <- dom |> inner_join(tot, by = "fips")
+  # BUG-014: every county gets a row, including counties with no CoC at all
+  # (HUD's boundaries never cover them; they are imputed). An inner join here
+  # dropped them, exactly as BUG-003 did for counties without a CoC profile.
+  keyed <- tot |> left_join(dom, by = "fips")
   matched <- keyed |> filter(COCNUM %in% have) |> inner_join(prof, by = "COCNUM")
   unmatched <- keyed |> filter(!(COCNUM %in% have))
   no_profile <<- no_profile + nrow(unmatched)

@@ -18,7 +18,8 @@
 
 suppressMessages(library(dplyr))
 stopifnot(dir.exists("data"))
-load("data/homeless.rda"); load("data/pit_coc.rda"); load("data/pit_us.rda")
+load("data/homeless.rda"); load("data/homeless_na.rda")
+load("data/pit_coc.rda"); load("data/pit_us.rda")
 YEARS <- 2007:2025
 
 prim_cache <- "data-raw/downloads/county_primary_coc.rds"
@@ -69,9 +70,24 @@ if (nrow(by_state))
   stop("state-years with no positive county count anywhere: ",
        paste(sprintf("%s/%d", by_state$st, by_state$year), collapse = ", "))
 
-if (no_coc > 0.005 * nrow(county_pit))
-  stop(sprintf("%d of %d county-years have no primary CoC (>0.5%%) -- broken join",
-               no_coc, nrow(county_pit)))
+# A county has no primary CoC exactly when HUD's boundaries leave it
+# uncovered, i.e. exactly when it was imputed (NA in homeless_na). Anything else
+# is a broken join -- the Connecticut failure (BUG-002).
+imputed <- do.call(rbind, lapply(YEARS, function(yr)
+  data.frame(fips = homeless_na$fips, year = yr,
+             imp = is.na(homeless_na[[sprintf("count%02d", yr %% 100)]]))))
+# (A keyed county is also imputed, legitimately, when its CoC filed no PIT
+# count that year -- 69 CoCs had boundaries but no count in 2007.)
+reported <- pit_coc |> filter(total > 0) |> transmute(COCNUM = coc_num, year, rep = TRUE)
+keyed <- primary |> distinct(fips, year, .keep_all = TRUE) |>
+  left_join(reported, by = c("COCNUM", "year")) |>
+  transmute(fips, year, keyed = TRUE, rep = coalesce(rep, FALSE))
+chk <- imputed |> left_join(keyed, by = c("fips", "year")) |>
+  mutate(keyed = coalesce(keyed, FALSE), rep = coalesce(rep, FALSE))
+bad <- chk[(!chk$keyed & !chk$imp) | (chk$keyed & chk$rep & chk$imp), ]
+if (nrow(bad))
+  stop(sprintf("%d county-years where 'has a primary CoC' disagrees with 'was not imputed', e.g. %s",
+               nrow(bad), paste(head(paste(bad$fips, bad$year)), collapse = ", ")))
 message(sprintf("  no primary CoC: %d county-years (%.2f%%); CoC did not report a PIT count: %d (%.2f%%)",
                 no_coc, 100 * no_coc / nrow(county_pit),
                 no_ratio, 100 * no_ratio / nrow(county_pit)))

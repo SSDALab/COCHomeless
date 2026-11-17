@@ -42,7 +42,7 @@ test_that("pit_coc totals reconcile with hud<year>", {
   }
 })
 
-test_that("Kansas City (MO-604) is present throughout the series", {
+test_that("[BUG-001] Kansas City (MO-604) is present throughout the series", {
   # The footnote-marker regression test.
   for (yr in years_for("hud")) {
     h <- get_dataset(sprintf("hud%d", yr))
@@ -54,7 +54,7 @@ test_that("Kansas City (MO-604) is present throughout the series", {
   expect_true("MO-604" %in% as.character(pit_coc_detail$coc_num))
 })
 
-test_that("no CoC code carries an unstripped footnote marker", {
+test_that("[BUG-001] no CoC code carries an unstripped footnote marker", {
   bad <- grep("^[A-Z]{2}-[0-9A-Za-z]{3}[a-z]$", unique(pit_coc$coc_num), value = TRUE)
   expect_identical(bad, character(0),
                    label = paste("footnote-marked codes:", paste(bad, collapse = ", ")))

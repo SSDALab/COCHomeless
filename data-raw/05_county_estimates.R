@@ -28,6 +28,7 @@ suppressMessages({
 })
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 source("data-raw/00_geo_helpers.R")   # EQ, prep_tracts(), add_county_fips()
+source("data-raw/00_build_helpers.R") # round_preserve, water_fill, choose_primary, ...
 sf_use_s2(FALSE)
 stopifnot(dir.exists("data"))
 YEARS <- 2007:2025
@@ -97,6 +98,18 @@ if (length(bad))
        paste(head(bad, 20), collapse = ", "),
        "\n  -> county FIPS vintage mismatch between counties/area/pop2010")
 
+## ---- ACS pulls are cached and retried: the Census API is flaky (timeouts,
+## connection resets) and should not be able to fail a rebuild. ---------------
+cached_acs <- function(cache, ...) {
+  if (file.exists(cache)) return(readRDS(cache))
+  for (i in 1:5) {
+    out <- tryCatch(get_acs(...), error = function(e) { message("  ACS retry ", i, ": ", conditionMessage(e)); NULL })
+    if (!is.null(out)) { saveRDS(out, cache); return(out) }
+    Sys.sleep(10 * i)
+  }
+  stop("ACS pull failed 5 times: ", cache)
+}
+
 ## ---- plausibility caps (metro-aware) ---------------------------------------
 # Max homeless per county = cap_rate * ACS population. New York City's boroughs
 # and Los Angeles County -- dense major-metro cores with genuinely high
@@ -106,7 +119,8 @@ if (length(bad))
 METRO_FIPS <- c("36061", "36047", "36081", "36005", "36085",  # NYC boroughs
                 "06037")                                       # Los Angeles
 cap_rate_for <- function(fips) ifelse(fips %in% METRO_FIPS, 0.035, 0.02)
-pop_acs <- get_acs("county", variables = "B01003_001", year = ACS_END,
+pop_acs <- cached_acs(file.path("data-raw/downloads", sprintf("acs%d_county_pop.rds", ACS_END)),
+                   "county", variables = "B01003_001", year = ACS_END,
                    survey = "acs5", geometry = FALSE, progress_bar = FALSE) |>
   transmute(fips = GEOID, pop_acs = estimate)
 caps <- data.frame(fips = geo$fips) |> left_join(pop_acs, by = "fips") |>
@@ -136,13 +150,14 @@ if (!file.exists(state_csv)) {
                    shQuote(paste0("https://www.huduser.gov/portal/sites/default/",
                                   "files/xls/2007-2025-PIT-Counts-by-State.xlsb"))))
   }
-  system2(Sys.which("python3"),
-          c("data-raw/pit_state_extract.py", shQuote(xlsb), shQuote(state_csv)))
+  run_extractor(Sys.which("python3"),
+                c("data-raw/pit_state_extract.py", shQuote(xlsb), shQuote(state_csv)),
+                out = state_csv, src = xlsb)
 }
 hud_state <- utils::read.csv(state_csv)
 usps <- setNames(counties$STUSPS, counties$STATEFP)
 
-state_split <- function(yr, hud) {
+state_split <- function(yr, hud, prefer = BISTATE_REF) {
   own <- tapply(hud$count, substr(as.character(hud$coc_num), 1, 2), sum)
   hs <- hud_state[hud_state$year == yr, ]
   resid <- setNames(hs$total - ifelse(is.na(own[hs$state]), 0, own[hs$state]), hs$state)
@@ -151,82 +166,108 @@ state_split <- function(yr, hud) {
   cc <- local({ load(sprintf("data/county_coc%d.rda", yr))
                 get(sprintf("county_coc%d", yr)) })
   cc$ST <- usps[substr(cc$fips, 1, 2)]
-  out <- NULL
+  out <- NULL; members <- NULL; picks <- character()
   for (s in hosts) {
     cand <- cc[!is.na(cc$ST) & cc$ST == s & substr(cc$COCNUM, 1, 2) != s, ]
     if (!nrow(cand)) next
-    a <- tapply(cand$area_m2, cand$COCNUM, sum)
-    coc <- names(a)[which.max(a)]
+    # BUG-010: the CoC must be coded to a state that is SHORT by the residual
+    # (Missouri for MO-604). Picking the largest-area foreign CoC charged
+    # Kansas City's Kansas portion to OK-503 whenever its sliver into Kansas
+    # outsized MO-604's in HUD's pre-2016 boundary file.
+    coc <- pick_split_coc(s, resid, tapply(cand$area_m2, cand$COCNUM, sum),
+                          setNames(hud$count, as.character(hud$coc_num)), prefer)
+    if (is.na(coc)) stop(sprintf("%d: %s is %+d vs its CoCs but no CoC coded to a short state overlaps it",
+                                 yr, s, resid[[s]]))
     tot <- hud$count[as.character(hud$coc_num) == coc]
     if (!length(tot)) next
+    if (resid[[s]] >= tot) stop(sprintf("%d: split of %s gives %s %d of %d", yr, coc, s, resid[[s]], tot))
     out <- rbind(out,
                  data.frame(COCNUM = coc, ST = s, cnt = resid[[s]]),
                  data.frame(COCNUM = coc, ST = substr(coc, 1, 2),
                             cnt = tot - resid[[s]]))
+    # The host-state portion must land on host-state counties even where the
+    # CoC is only a sliver there (MO-604 reaches 0.7 km^2 into Kansas pre-2016).
+    members <- rbind(members, data.frame(fips = unique(cand$fips[cand$COCNUM == coc]),
+                                         COCNUM = coc))
+    picks[s] <- coc
   }
+  if (!is.null(out)) { attr(out, "members") <- members; attr(out, "picks") <- picks }
   out
 }
 
-## ---- largest-remainder rounding that preserves a group total ----------------
-round_preserve <- function(x) {
-  f <- floor(x); need <- round(sum(x)) - sum(f)
-  if (need > 0) { o <- order(x - f, decreasing = TRUE)[seq_len(need)]; f[o] <- f[o] + 1 }
-  as.integer(f)
-}
+# Identify each bi-state CoC once, from the most recent boundary file, and hold
+# it fixed across the series (BUG-010).
+BISTATE_REF <- NULL
+BISTATE_REF <- local({
+  yr <- max(YEARS); e <- new.env(); load(sprintf("data/hud%d.rda", yr), envir = e)
+  attr(state_split(yr, get(sprintf("hud%d", yr), envir = e), prefer = NULL), "picks")
+})
+message("bi-state CoCs (from ", max(YEARS), "): ",
+        paste(names(BISTATE_REF), BISTATE_REF, sep = "<-", collapse = ", "))
 
-## ---- water-filling: split a CoC total across its counties by population
-## density, subject to per-county caps, pushing any excess onto the counties
-## that still have headroom. Conserves the CoC total when capacity allows. ----
-water_fill <- function(total, D, cap) {
-  n <- length(D); alloc <- numeric(n); active <- rep(TRUE, n); rem <- total
-  cap[is.na(cap)] <- Inf; it <- 0
-  while (rem > 1e-6 && any(active) && it < 200) {
-    it <- it + 1
-    sa <- sum(D[active]); if (sa <= 0) break
-    give <- numeric(n); give[active] <- rem * D[active] / sa
-    prov <- alloc + give
-    over <- active & (prov > cap + 1e-9)
-    if (!any(over)) { alloc <- prov; rem <- 0 }
-    else {
-      rem <- rem - sum(cap[over] - alloc[over])
-      alloc[over] <- cap[over]; active[over] <- FALSE
-    }
-  }
-  alloc
-}
+## round_preserve() and water_fill() live in data-raw/00_build_helpers.R
+## (sourced above) so they are unit-tested.
 
 co5070 <- st_make_valid(st_transform(counties[, "fips"], 5070))
+county_area <- setNames(as.numeric(st_area(co5070)), co5070$fips)
+
+## ---- boundary fallback index (BUG-008) --------------------------------------
+# HUD's boundary file for a year sometimes omits a CoC that reported a PIT count
+# (CA-524 2009-2012, LA-509 2007-2014, five Maryland CoCs in 2020, ...). Such a
+# CoC used to reach no county and its whole count was dropped. Every one of
+# them has a polygon in some other year, so borrow the nearest year's.
+coc_by_year <- lapply(setNames(YEARS, YEARS), function(y) {
+  e <- new.env(); load(sprintf("data/coc%d.rda", y), envir = e)
+  x <- get(sprintf("coc%d", y), envir = e)[, "COCNUM"]
+  x$COCNUM <- normalize_coc_code(x$COCNUM)
+  st_make_valid(st_transform(x, 5070))
+})
+poly_years <- split(rep(YEARS, vapply(coc_by_year, nrow, 1L)),
+                    unlist(lapply(coc_by_year, `[[`, "COCNUM")))
+TERRITORY_COC <- c("AS", "GU", "MP", "PR", "VI")
 
 ## ---- per-year apportionment -------------------------------------------------
 allocate_year <- function(yr) {
-  load(sprintf("data/coc%d.rda", yr)); coc <- get(sprintf("coc%d", yr))
   load(sprintf("data/hud%d.rda", yr)); hud <- get(sprintf("hud%d", yr))
-  cc <- st_make_valid(st_transform(coc[, "COCNUM"], 5070))
+  hud$coc_num <- as.character(hud$coc_num)
+  cc <- coc_by_year[[as.character(yr)]]
+
+  need <- setdiff(hud$coc_num[hud$count > 0 &
+                                !substr(hud$coc_num, 1, 2) %in% TERRITORY_COC],
+                  cc$COCNUM)
+  for (k in need) {
+    by <- nearest_boundary_year(yr, poly_years[[k]] %||% integer())
+    if (is.na(by)) stop(sprintf("%s reports %d people in %d but has no polygon in any year",
+                                k, hud$count[hud$coc_num == k], yr))
+    cc <- rbind(cc, coc_by_year[[as.character(by)]][coc_by_year[[as.character(by)]]$COCNUM == k, ])
+    fallback <<- rbind(fallback, data.frame(year = yr, COCNUM = k, polygon_year = by))
+  }
+
   int <- st_intersection(co5070, cc)
   int$a <- as.numeric(st_area(int))
   ov <- st_drop_geometry(int) |> filter(a > 0)
 
-  # Each county's PRIMARY CoC = the CoC covering the largest share of it. This
-  # avoids attributing a CoC to counties it only slivers into (raw density
-  # weighting otherwise hands a dense neighbor a CoC that isn't really there).
-  dom <- ov |> group_by(fips) |> slice_max(a, n = 1, with_ties = FALSE) |>
-    ungroup() |> select(fips, COCNUM)
+  # Each county's PRIMARY CoC = the CoC covering the largest share of it, and
+  # only if it covers at least 1% of the county (BUG-009): a county the
+  # boundary file leaves uncovered is imputed, not handed to a neighbour that
+  # slivers into it. Raw density weighting over every overlapped county would
+  # also hand a dense neighbour a CoC that isn't really there (BUG-004).
+  dom <- choose_primary(ov, county_area, min_share = MIN_PRIMARY_SHARE)
 
   # Sub-county / nested CoCs (e.g. Long Beach inside LA County) are nobody's
   # primary CoC; assign each to the county that contains most of it, so its
   # count is not lost.
-  orphan <- setdiff(unique(hud$coc_num), dom$COCNUM)
-  orphan_assign <- ov |> filter(COCNUM %in% orphan) |>
-    group_by(COCNUM) |> slice_max(a, n = 1, with_ties = FALSE) |>
-    ungroup() |> select(fips, COCNUM)
+  orphan_assign <- assign_orphans(ov, dom, unique(hud$coc_num), county_area)
 
   membership <- bind_rows(dom, orphan_assign) |> distinct(fips, COCNUM)
 
   # Each county's PRIMARY CoC, exported so that 10_county_pit.R and
-  # 12_pit_detail.R split the same county the same way. They used to recompute a
-  # dominant CoC of their own from county_coc<year>$w_county, which could pick a
-  # different CoC than the one the count was actually apportioned from.
-  primary <<- bind_rows(primary, mutate(dom, year = yr))
+  # 12_pit_detail.R split the same county the same way (BUG-011). A county with
+  # no primary of its own but which hosts an orphan CoC takes that CoC.
+  prim_y <- bind_rows(mutate(dom, via = "primary"),
+                      orphan_assign |> filter(!fips %in% dom$fips) |>
+                        distinct(fips, .keep_all = TRUE) |> mutate(via = "nested"))
+  primary <<- bind_rows(primary, mutate(prim_y, year = yr))
 
   # Within each CoC, split its PIT count among member counties by population
   # density (paper's volume-preserving estimator), water-filling so no county
@@ -234,8 +275,10 @@ allocate_year <- function(yr) {
   # For a CoC that HUD reports split across states, allocate each state's
   # published portion within that state's member counties only.
   spl <- state_split(yr, hud)
+  if (!is.null(attr(spl, "members")))
+    membership <- bind_rows(membership, attr(spl, "members")) |> distinct(fips, COCNUM)
 
-  membership |>
+  a <- membership |>
     left_join(dens[, c("fips", "D")], by = "fips") |>
     left_join(caps[, c("fips", "cap")], by = "fips") |>
     filter(!is.na(D), D > 0) |>
@@ -253,23 +296,80 @@ allocate_year <- function(yr) {
     })() |>
     group_by(COCNUM, grp) |>
     group_modify(~ { .x$cnt <- round_preserve(water_fill(.x$grp_count[1], .x$D, .x$cap)); .x }) |>
-    ungroup() |>
-    group_by(fips) |> summarise(count = sum(cnt), .groups = "drop") |>
+    ungroup()
+
+  # Per (county, CoC) allocation, kept so later steps (14_unsheltered_
+  # imputation.R) can apportion a CoC-level quantity with exactly the same split.
+  alloc <<- bind_rows(alloc, a |> transmute(fips, COCNUM, year = yr, cnt,
+                                            coc_count = count))
+
+  a |> group_by(fips) |> summarise(count = sum(cnt), .groups = "drop") |>
     mutate(year = yr)
 }
 
+MIN_PRIMARY_SHARE <- 0.01
 panel_cache <- "data-raw/downloads/county_panel.rds"
 prim_cache  <- "data-raw/downloads/county_primary_coc.rds"
-primary <- NULL
-if (file.exists(panel_cache) && file.exists(prim_cache)) {
+alloc_cache <- "data-raw/downloads/county_coc_alloc.rds"
+fb_cache    <- "data-raw/downloads/boundary_fallback.rds"
+primary <- NULL; alloc <- NULL; fallback <- NULL
+if (all(file.exists(c(panel_cache, prim_cache, alloc_cache, fb_cache)))) {
   message("loading cached apportionment panel")
   panel <- readRDS(panel_cache)
+  alloc <- readRDS(alloc_cache)
 } else {
   message("apportioning ", length(YEARS), " years ...")
   panel <- bind_rows(lapply(YEARS, function(y) { message("  ", y); allocate_year(y) }))
   saveRDS(panel, panel_cache)
   saveRDS(primary, prim_cache)
+  saveRDS(alloc, alloc_cache)
+  saveRDS(fallback, fb_cache)
 }
+
+## ---- county_coc_alloc: where each county's estimate comes from ------------
+# One row per (county, year, CoC) with the number of people apportioned from
+# that CoC, its role, how much of the county the CoC covers, and which year's
+# HUD boundary was used (BUG-008 fallback). Shipped so users -- and the QC tests
+# -- can trace every county estimate to its source CoCs.
+fallback <- readRDS(fb_cache)
+if (is.null(fallback)) fallback <- data.frame(year = integer(), COCNUM = character(),
+                                             polygon_year = integer())
+prim <- readRDS(prim_cache)
+is_primary_of <- prim |> filter(via == "primary") |> distinct(COCNUM, year) |> mutate(somebodys = TRUE)
+county_coc_alloc <- alloc |>
+  left_join(prim |> filter(via == "primary") |> select(fips, COCNUM, year, share) |>
+              mutate(own = TRUE), by = c("fips", "COCNUM", "year")) |>
+  left_join(prim |> filter(via == "nested") |> select(fips, COCNUM, year, nshare = share),
+            by = c("fips", "COCNUM", "year")) |>
+  left_join(is_primary_of, by = c("COCNUM", "year")) |>
+  left_join(fallback, by = c("year", "COCNUM")) |>
+  mutate(role = case_when(coalesce(own, FALSE) ~ "primary",
+                          !coalesce(somebodys, FALSE) ~ "nested",
+                          TRUE ~ "bi-state"),
+         share = coalesce(share, nshare),
+         boundary_year = as.integer(coalesce(polygon_year, year)),
+         year = as.integer(year))
+county_coc_alloc <- county_coc_alloc |>
+  transmute(fips, year, coc_num = COCNUM, count = as.integer(cnt), role,
+            share = round(share, 6), boundary_year) |>
+  arrange(fips, year, desc(role == "primary"), coc_num) |> as.data.frame()
+save(county_coc_alloc, file = "data/county_coc_alloc.rda", compress = "xz")
+
+## ---- conservation guard: every placed CoC's count must reach counties -------
+hud_all <- bind_rows(lapply(YEARS, function(y) {
+  e <- new.env(); load(sprintf("data/hud%d.rda", y), envir = e)
+  h <- get(sprintf("hud%d", y), envir = e)
+  data.frame(COCNUM = as.character(h$coc_num), year = y, count = h$count)
+})) |> filter(count > 0, !substr(COCNUM, 1, 2) %in% TERRITORY_COC)
+leak <- hud_all |>
+  left_join(alloc |> group_by(COCNUM, year) |> summarise(placed = sum(cnt), .groups = "drop"),
+            by = c("COCNUM", "year")) |>
+  mutate(placed = coalesce(placed, 0L)) |> filter(placed != count)
+if (nrow(leak))
+  stop(sprintf("%d CoC-years not fully placed (%d people), e.g. %s",
+                  nrow(leak), sum(leak$count - leak$placed),
+                  paste(head(sprintf("%s %d (%d/%d)", leak$COCNUM, leak$year,
+                                     leak$placed, leak$count), 15), collapse = ", ")))
 
 ## ---- wide county x year, with NA where a county had no CoC that year --------
 wide <- panel |>
@@ -309,7 +409,8 @@ acs_vars <- c(population = "B01003_001", black = "B02001_003",
               married_m = "B12001_004", married_f = "B12001_013")
 u18 <- c("B01001_003","B01001_004","B01001_005","B01001_006",
          "B01001_027","B01001_028","B01001_029","B01001_030")
-araw <- get_acs("county", year = ACS_END, survey = "acs5", output = "wide",
+araw <- cached_acs(file.path("data-raw/downloads", sprintf("acs%d_county_cov.rds", ACS_END)),
+                   "county", year = ACS_END, survey = "acs5", output = "wide",
                 variables = c(acs_vars, setNames(u18, u18)),
                 geometry = FALSE, progress_bar = FALSE)
 ae <- araw[, c("GEOID", paste0(c(names(acs_vars), u18), "E"))]
@@ -353,6 +454,9 @@ build <- function(counts) {
 }
 homeless_na <- build(wide)            # pre-imputation (NA counts retained)
 homeless    <- build(homeless_counts) # fully imputed
+# Deterministic row order (by fips) so rebuilds and release diffs are stable.
+homeless_na <- homeless_na[order(homeless_na$fips), ]
+homeless    <- homeless[order(homeless$fips), ]
 
 save(homeless,    file = "data/homeless.rda",    compress = "xz")
 save(homeless_na, file = "data/homeless_na.rda", compress = "xz")

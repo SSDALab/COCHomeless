@@ -87,14 +87,36 @@ test_that("county-derived state totals match HUD's published state totals", {
   recent <- cmp[cmp$year >= 2017, ]
   expect_equal(median(abs(recent$pct)), 0,
                label = "median state deviation from HUD, 2017 onward")
-  expect_lt(max(abs(recent$pct)), 12)
   expect_gt(mean(abs(recent$pct) < 5), 0.95)
-
+  # The whole total includes counties HUD's boundary files leave uncovered,
+  # which the paper's method fills by imputation; those people are on top of
+  # HUD's state count. Bounded loosely here; the apportioned part is tested
+  # exactly below.
+  expect_lt(max(abs(recent$pct)), 15)
   early <- cmp[cmp$year < 2017, ]
-  expect_lt(max(abs(early$pct)), 50)
+  expect_lt(max(abs(early$pct)), 60)
 })
 
-test_that("the bi-state split reaches the counties", {
+test_that("[BUG-008] [BUG-010] APPORTIONED state totals reproduce HUD's state totals", {
+  # Excluding imputed counties, every person comes from a HUD CoC count, so the
+  # state roll-up must match HUD. Exact in most state-years; the residue is
+  # CoCs that cross state lines (Omaha/Council Bluffs NE-IA, Fort Smith AR-OK),
+  # which HUD credits to one state and we place on both. Before BUG-008/010
+  # were fixed, Louisiana 2007 was 1,452 short and Oklahoma lost its whole
+  # balance-of-state CoC in some years.
+  h <- hud_state()
+  u <- usps_of()
+  rows <- do.call(rbind, lapply(intersect(unique(h$year), years_for("hud")), function(yr)
+    data.frame(state = u[substr(homeless_na$fips, 1, 2)], year = yr,
+               v = homeless_na[[sprintf("count%02d", yr %% 100)]])))
+  agg <- stats::aggregate(v ~ state + year, data = rows, FUN = sum, na.action = na.omit)
+  cmp <- merge(h, agg, by = c("state", "year"))
+  pct <- 100 * (cmp$v - cmp$total) / pmax(cmp$total, 1)
+  expect_gt(mean(cmp$v == cmp$total), 0.8)
+  expect_lt(max(abs(pct)), 4)
+})
+
+test_that("[BUG-012] the bi-state split reaches the counties", {
   # Without HUD's published Missouri/Kansas split, density weighting hands dense
   # Wyandotte County KS a large share of the whole of MO-604 and pushes Kansas
   # about 29% above its officially reported total.
