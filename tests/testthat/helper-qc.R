@@ -99,6 +99,46 @@ qc_primary_coverage <- function(years = QC_YEARS()) {
              boundary_year = p$boundary_year, has_count = hc)
 }
 
+# ---- 3b. Membership gaps (BUG-016) --------------------------------------------
+# County-years left to the imputation model (NA in homeless_na), covered by no
+# CoC in that year's boundary file, although the county belongs to the same CoC
+# in the nearest years either side and that CoC reported a count: HUD's polygon
+# dropped the county for a while, and imputing it adds people on top of its
+# CoC's count.
+qc_membership_gaps <- function(years = QC_YEARS()) {
+  hna <- get_dataset("homeless_na"); al <- get_dataset("county_coc_alloc")
+  pc <- get_dataset("pit_coc")
+  p <- al[al$role %in% c("primary", "bridged"), c("fips", "year", "coc_num")]
+  rep_key <- paste(pc$coc_num[pc$total > 0], pc$year[pc$total > 0])
+  out <- lapply(split(p, p$fips), function(f) {
+    yrs <- sort(f$year); k <- setNames(f$coc_num, f$year)
+    g <- setdiff(years[years > min(yrs) & years < max(yrs)], yrs)
+    if (!length(g)) return(NULL)
+    b <- vapply(g, function(y) k[[as.character(max(yrs[yrs < y]))]], "")
+    a <- vapply(g, function(y) k[[as.character(min(yrs[yrs > y]))]], "")
+    d <- data.frame(fips = f$fips[1], year = g, coc_num = b)[b == a, ]
+    d[paste(d$coc_num, d$year) %in% rep_key, ]
+  })
+  out <- do.call(rbind, out)
+  empty <- data.frame(fips = character(), year = integer(), coc_num = character())
+  if (is.null(out) || !nrow(out)) return(empty)
+  # Only a real gap: the county was imputed that year AND no CoC in that year's
+  # boundary file covers 1% of it. (A county HUD maps into a different CoC --
+  # even one that did not report -- is a boundary assignment, not a gap.)
+  imputed <- vapply(seq_len(nrow(out)), function(i)
+    is.na(hna[[sprintf("count%02d", out$year[i] %% 100)]][hna$fips == out$fips[i]]), TRUE)
+  # share of the COUNTY's area (w_county is normalised over the covered part only)
+  ar <- get_dataset("area"); km2 <- setNames(ar$skm, ar$fips)
+  covered <- vapply(seq_len(nrow(out)), function(i) {
+    cc <- get_dataset(sprintf("county_coc%d", out$year[i]))
+    a <- cc$area_m2[cc$fips == out$fips[i]] / (km2[[out$fips[i]]] * 1e6)
+    any(a >= QC_MIN_PRIMARY_SHARE)
+  }, TRUE)
+  out <- out[imputed & !covered, ]
+  rownames(out) <- NULL
+  out
+}
+
 # ---- 4. County swings, classified by cause ----------------------------------
 # Every extreme county year-over-year swing, labelled with the first matching
 # explanation:

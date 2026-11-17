@@ -4,7 +4,7 @@ Running list of every defect found in COCHomeless and how it was fixed.
 **Source of truth:** `tests/testthat/fixtures/bug_registry.csv` -- edit that,
 then run `Rscript data-raw/99_render_bugs.R`. See `TESTING.md` for the process.
 
-15 registered: 15 fixed, 0 open.
+16 registered: 16 fixed, 0 open.
 
 | ID | Status | Found in | Fixed in | Bug |
 |---|---|---|---|---|
@@ -23,6 +23,19 @@ then run `Rscript data-raw/99_render_bugs.R`. See `TESTING.md` for the process.
 | BUG-013 | fixed | 0.3.0 | 0.4.0 | Transient Census API errors aborted the rebuild |
 | BUG-014 | fixed | 0.4.0 | 0.4.0 | Counties with no CoC in any year dropped from county_pit_detail |
 | BUG-015 | fixed | 0.4.0 | 0.4.0 | Failed .xlsb extraction silently reused a stale CSV |
+| BUG-016 | fixed | 0.4.0 | 0.4.0 | Counties dropped from their CoC by HUD map gaps were imputed on top of it |
+
+## BUG-016 -- Counties dropped from their CoC by HUD map gaps were imputed on top of it
+
+**Status:** fixed. Found in 0.4.0; fixed in 0.4.0.
+
+- **Symptom:** Found re-checking the Sutter County (06101) example: in 2011-2014 Sutter received all of CA-524 (Yuba/Sutter) while Yuba County (06115) was model-imputed (~250/yr). Nationally 63 county-years in 26 counties (11 CoCs, e.g. OK-506, LA-509, CO-500) double-counted ~7,800 people, and their CoCs' counts piled onto the remaining counties.
+- **Cause:** HUD's boundary files for some years draw a CoC without one of its counties (CA-524's 2013-2014 polygon covers 8 of Yuba's 1,645 km2; it is also the BUG-008 fallback for 2011-2012). With no CoC covering 1% of it, the county was left to the imputation model.
+- **Fix:** bridge_membership_gaps() in 00_build_helpers.R: a county with no primary CoC is kept in CoC k (role 'bridged' in county_coc_alloc) when k is its primary in the nearest earlier and later years and k reports that year; 05 apportions in two passes. QC report flags any remaining gap.
+- **Regression tests:**
+  - `test-build-helpers.R`: [BUG-016] bridge_membership_gaps keeps a county in its CoC across a map gap
+  - `test-qc-allocation.R`: [BUG-016] no county drops out of its CoC for a few years and is imputed instead
+  - `test-qc-allocation.R`: [BUG-016] Yuba and Sutter share CA-524 in every year it reports
 
 ## BUG-015 -- Failed .xlsb extraction silently reused a stale CSV
 

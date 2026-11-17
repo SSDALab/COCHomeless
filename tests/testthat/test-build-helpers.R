@@ -198,3 +198,19 @@ test_that("[BUG-015] build_python prefers COCHOMELESS_PYTHON, then the project v
   Sys.unsetenv("COCHOMELESS_PYTHON"); unlink(venv)
   expect_identical(build_python(td), unname(Sys.which("python3")))
 })
+
+# ---- membership gaps (BUG-016) ----------------------------------------------------
+test_that("[BUG-016] bridge_membership_gaps keeps a county in its CoC across a map gap", {
+  yrs <- 2010:2016
+  prim <- rbind(
+    data.frame(fips = "A", year = c(2010:2011, 2015:2016), COCNUM = "K"),   # gap 2012-14
+    data.frame(fips = "B", year = c(2010, 2016), COCNUM = c("K", "J")),     # changes CoC
+    data.frame(fips = "C", year = 2012:2014, COCNUM = "K"),                 # gaps at the ends
+    data.frame(fips = "D", year = yrs, COCNUM = "K"))                       # no gap
+  reporting <- data.frame(COCNUM = "K", year = setdiff(yrs, 2013))           # K silent in 2013
+  b <- bridge_membership_gaps(prim, yrs, reporting)
+  expect_identical(b$fips, c("A", "A"))
+  expect_identical(b$year, c(2012L, 2014L))    # 2013 skipped: K reported nothing
+  expect_identical(b$COCNUM, c("K", "K"))
+  expect_equal(nrow(bridge_membership_gaps(prim[0, ], yrs, reporting)), 0L)
+})

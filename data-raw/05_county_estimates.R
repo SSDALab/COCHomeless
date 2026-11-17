@@ -227,7 +227,7 @@ poly_years <- split(rep(YEARS, vapply(coc_by_year, nrow, 1L)),
 TERRITORY_COC <- c("AS", "GU", "MP", "PR", "VI")
 
 ## ---- per-year apportionment -------------------------------------------------
-allocate_year <- function(yr) {
+allocate_year <- function(yr, bridge = NULL) {
   load(sprintf("data/hud%d.rda", yr)); hud <- get(sprintf("hud%d", yr))
   hud$coc_num <- as.character(hud$coc_num)
   cc <- coc_by_year[[as.character(yr)]]
@@ -254,18 +254,32 @@ allocate_year <- function(yr) {
   # also hand a dense neighbour a CoC that isn't really there (BUG-004).
   dom <- choose_primary(ov, county_area, min_share = MIN_PRIMARY_SHARE)
 
+  # BUG-016: counties HUD's polygon temporarily leaves out keep their CoC.
+  bdom <- dom[0, ]
+  if (!is.null(bridge)) {
+    b <- bridge[bridge$year == yr & !bridge$fips %in% dom$fips &
+                  bridge$COCNUM %in% hud$coc_num[hud$count > 0], c("fips", "COCNUM")]
+    if (nrow(b)) {
+      osh <- ov |> group_by(fips, COCNUM) |> summarise(a = sum(a), .groups = "drop")
+      b <- left_join(b, osh, by = c("fips", "COCNUM"))
+      b$share <- coalesce(b$a / county_area[b$fips], 0)
+      bdom <- b[, c("fips", "COCNUM", "share")]
+    }
+  }
+
   # Sub-county / nested CoCs (e.g. Long Beach inside LA County) are nobody's
   # primary CoC; assign each to the county that contains most of it, so its
   # count is not lost.
-  orphan_assign <- assign_orphans(ov, dom, unique(hud$coc_num), county_area)
+  orphan_assign <- assign_orphans(ov, bind_rows(dom, bdom), unique(hud$coc_num), county_area)
 
-  membership <- bind_rows(dom, orphan_assign) |> distinct(fips, COCNUM)
+  membership <- bind_rows(dom, bdom, orphan_assign) |> distinct(fips, COCNUM)
 
   # Each county's PRIMARY CoC, exported so that 10_county_pit.R and
   # 12_pit_detail.R split the same county the same way (BUG-011). A county with
   # no primary of its own but which hosts an orphan CoC takes that CoC.
   prim_y <- bind_rows(mutate(dom, via = "primary"),
-                      orphan_assign |> filter(!fips %in% dom$fips) |>
+                      mutate(bdom, via = "bridged"),
+                      orphan_assign |> filter(!fips %in% c(dom$fips, bdom$fips)) |>
                         distinct(fips, .keep_all = TRUE) |> mutate(via = "nested"))
   primary <<- bind_rows(primary, mutate(prim_y, year = yr))
 
@@ -318,8 +332,24 @@ if (all(file.exists(c(panel_cache, prim_cache, alloc_cache, fb_cache)))) {
   panel <- readRDS(panel_cache)
   alloc <- readRDS(alloc_cache)
 } else {
+  run_pass <- function(bridge) {
+    primary <<- NULL; alloc <<- NULL; fallback <<- NULL
+    bind_rows(lapply(YEARS, function(y) { message("  ", y); allocate_year(y, bridge) }))
+  }
   message("apportioning ", length(YEARS), " years ...")
-  panel <- bind_rows(lapply(YEARS, function(y) { message("  ", y); allocate_year(y) }))
+  panel <- run_pass(NULL)
+  # BUG-016: bridge counties that HUD's polygons drop for a few interior years,
+  # then apportion again with them kept in their CoC.
+  reporting <- bind_rows(lapply(YEARS, function(y) {
+    e <- new.env(); load(sprintf("data/hud%d.rda", y), envir = e)
+    h <- get(sprintf("hud%d", y), envir = e)
+    data.frame(COCNUM = as.character(h$coc_num), year = y)[h$count > 0, ]
+  }))
+  bridge <- bridge_membership_gaps(
+    primary |> filter(via == "primary") |> select(fips, year, COCNUM), YEARS, reporting)
+  message(sprintf("bridging %d county-years in %d counties (BUG-016); second pass ...",
+                  nrow(bridge), length(unique(bridge$fips))))
+  if (nrow(bridge)) panel <- run_pass(bridge)
   saveRDS(panel, panel_cache)
   saveRDS(primary, prim_cache)
   saveRDS(alloc, alloc_cache)
@@ -335,24 +365,28 @@ fallback <- readRDS(fb_cache)
 if (is.null(fallback)) fallback <- data.frame(year = integer(), COCNUM = character(),
                                              polygon_year = integer())
 prim <- readRDS(prim_cache)
-is_primary_of <- prim |> filter(via == "primary") |> distinct(COCNUM, year) |> mutate(somebodys = TRUE)
+is_primary_of <- prim |> filter(via %in% c("primary", "bridged")) |> distinct(COCNUM, year) |>
+  mutate(somebodys = TRUE)
 county_coc_alloc <- alloc |>
   left_join(prim |> filter(via == "primary") |> select(fips, COCNUM, year, share) |>
               mutate(own = TRUE), by = c("fips", "COCNUM", "year")) |>
   left_join(prim |> filter(via == "nested") |> select(fips, COCNUM, year, nshare = share),
             by = c("fips", "COCNUM", "year")) |>
+  left_join(prim |> filter(via == "bridged") |> select(fips, COCNUM, year, bshare = share) |>
+              mutate(bridged = TRUE), by = c("fips", "COCNUM", "year")) |>
   left_join(is_primary_of, by = c("COCNUM", "year")) |>
   left_join(fallback, by = c("year", "COCNUM")) |>
   mutate(role = case_when(coalesce(own, FALSE) ~ "primary",
+                          coalesce(bridged, FALSE) ~ "bridged",
                           !coalesce(somebodys, FALSE) ~ "nested",
                           TRUE ~ "bi-state"),
-         share = coalesce(share, nshare),
+         share = coalesce(share, bshare, nshare),
          boundary_year = as.integer(coalesce(polygon_year, year)),
          year = as.integer(year))
 county_coc_alloc <- county_coc_alloc |>
   transmute(fips, year, coc_num = COCNUM, count = as.integer(cnt), role,
             share = round(share, 6), boundary_year) |>
-  arrange(fips, year, desc(role == "primary"), coc_num) |> as.data.frame()
+  arrange(fips, year, desc(role %in% c("primary", "bridged")), coc_num) |> as.data.frame()
 save(county_coc_alloc, file = "data/county_coc_alloc.rda", compress = "xz")
 
 ## ---- conservation guard: every placed CoC's count must reach counties -------

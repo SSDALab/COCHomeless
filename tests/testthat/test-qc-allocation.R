@@ -97,3 +97,19 @@ test_that("county_coc_alloc reconstructs every apportioned county estimate", {
                 label = sprintf("%d: county with a count but no source CoC", yr))
   }
 })
+
+test_that("[BUG-016] no county drops out of its CoC for a few years and is imputed instead", {
+  g <- qc_membership_gaps()
+  expect(nrow(g) == 0, sprintf("%d county-years in a CoC membership gap, e.g. %s", nrow(g),
+         paste(utils::head(sprintf("%s %d (%s)", g$fips, g$year, g$coc_num), 8), collapse = ", ")))
+})
+
+test_that("[BUG-016] Yuba and Sutter share CA-524 in every year it reports", {
+  al <- county_coc_alloc[county_coc_alloc$coc_num == "CA-524", ]
+  for (yr in unique(al$year)) {
+    a <- al[al$year == yr, ]
+    expect_setequal(a$fips, c("06101", "06115"))
+    expect_true(all(a$count > 0), label = sprintf("CA-524 %d", yr))
+  }
+  expect_false(anyNA(homeless_na[homeless_na$fips == "06115", grep("^count", names(homeless_na))]))
+})

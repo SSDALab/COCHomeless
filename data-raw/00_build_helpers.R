@@ -83,6 +83,41 @@ assign_orphans <- function(ov, dom, cocs, county_area = NULL) {
   o
 }
 
+# BUG-016. HUD sometimes draws a CoC without one of its counties for a few
+# years (CA-524 Yuba/Sutter leaves out Yuba County in the 2013-2014 files, and
+# that polygon is also the BUG-008 fallback for 2011-2012). The county is then
+# covered by no CoC, gets a model-imputed count ON TOP of its CoC's count (a
+# double count), and the CoC's whole count lands on the remaining counties.
+# A county-year with no primary CoC is bridged to CoC k when k is the county's
+# primary CoC in the nearest earlier AND the nearest later year with an
+# assignment, and k reports a PIT count that year. Only interior gaps are
+# bridged; a county that changes CoC across the gap is not.
+#   prim: data.frame(fips, year, COCNUM), one primary per county-year;
+#   years: all build years; reporting: data.frame(COCNUM, year) of CoCs with a
+#   positive count. Returns data.frame(fips, year, COCNUM).
+bridge_membership_gaps <- function(prim, years, reporting) {
+  empty <- data.frame(fips = character(), year = integer(), COCNUM = character())
+  if (!nrow(prim)) return(empty)
+  out <- lapply(split(prim, prim$fips), function(f) {
+    yrs <- sort(unique(f$year))
+    k_by <- setNames(f$COCNUM, f$year)
+    gaps <- setdiff(years[years > min(yrs) & years < max(yrs)], yrs)
+    if (!length(gaps)) return(NULL)
+    b <- vapply(gaps, function(y) k_by[[as.character(max(yrs[yrs < y]))]], "")
+    a <- vapply(gaps, function(y) k_by[[as.character(min(yrs[yrs > y]))]], "")
+    keep <- b == a
+    if (!any(keep)) return(NULL)
+    data.frame(fips = f$fips[1], year = as.integer(gaps[keep]), COCNUM = b[keep])
+  })
+  out <- do.call(rbind, out)
+  if (is.null(out)) return(empty)
+  rep_key <- paste(reporting$COCNUM, reporting$year)
+  out <- out[paste(out$COCNUM, out$year) %in% rep_key, ]
+  out <- out[order(out$fips, out$year), ]
+  rownames(out) <- NULL
+  out
+}
+
 # BUG-010. A state whose HUD state total exceeds the sum of the CoCs coded to
 # it (resid > 0) holds part of a CoC coded to another state. That CoC must be
 # (a) coded to a state that is SHORT (resid < 0) -- for Kansas City, MO-604 and

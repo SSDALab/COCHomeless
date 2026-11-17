@@ -2,10 +2,10 @@
 
 ## Data corrections
 
-Three more allocation defects let people be lost or misplaced between a CoC's
-PIT count and the county estimates. They were found by checking, CoC by CoC,
-that every reported person reaches a county. County estimates change for 4,309
-county-years (7.2%) in 1,091 counties, almost all before 2019; re-run analyses
+Four more allocation defects let people be lost, misplaced or double-counted
+between a CoC's PIT count and the county estimates. They were found by checking,
+CoC by CoC, that every reported person reaches a county. County estimates change
+for 4,221 county-years (7.1%) in 1,103 counties, almost all before 2019; re-run analyses
 built on 0.3.0 county data. CoC and national PIT figures are unchanged. Each
 defect is in the new bug registry (`BUGS.md`) with its regression tests.
 
@@ -32,6 +32,17 @@ defect is in the new bug registry (`BUGS.md`) with its regression tests.
   balance-of-state CoC lost 1,981 people over 2007-2015, falling to zero in
   some years. The bi-state CoC is now identified from the latest boundary file
   and held fixed.
+
+* **Counties that HUD's map dropped from their CoC for a few years were
+  double-counted (BUG-016).** Some boundary files draw a CoC without one of
+  its counties. For example, CA-524 (Yuba/Sutter) covers 8 of Yuba County's
+  1,645 km^2 in the 2013-2014 files, and that polygon is also the fallback for
+  2011-2012. The county was then modelled on top of its CoC's count, and
+  the CoC's whole count landed on the remaining counties. Sutter carried all of
+  CA-524 in 2011-2014. This affected 39 county-years in 18 counties (7 CoCs)
+  and about 1,460 double-counted people. Such a county now stays in its CoC
+  when the CoC holds it in the years before and after and reports that year.
+  These rows have role `"bridged"` in `county_coc_alloc`.
 
 * **Counties with no CoC in any year were dropped from `county_pit_detail`
   (BUG-014)**, for example Baker County, FL. They now use the national

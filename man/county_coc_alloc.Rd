@@ -14,10 +14,14 @@ A data frame with one row per county-year-CoC and 7 variables:
   \item{role}{\code{"primary"}: the CoC covering the largest part of the
     county (at least 1\% of it). \code{"nested"}: a sub-county CoC (e.g. Long
     Beach inside Los Angeles County) assigned whole to the county holding most
-    of it. \code{"bi-state"}: the Kansas portion of Kansas City's CoC
+    of it. \code{"bridged"}: the county's own CoC in a year when HUD's
+    boundary file leaves the county out, though the CoC holds it in the years
+    before and after (e.g. Yuba County in \code{CA-524}, 2011-2014); without
+    this the county would be imputed on top of its CoC's count.
+    \code{"bi-state"}: the Kansas portion of Kansas City's CoC
     (\code{MO-604}), split by HUD's published state totals.}
-  \item{share}{Share of the county's area the CoC covers (\code{NA} for
-    bi-state rows and nested CoCs in a county with its own primary).}
+  \item{share}{Share of the county's area the CoC covers in that year's
+    boundary file (below 1\% or 0 for bridged rows; \code{NA} for bi-state rows and nested CoCs in a county with its own primary).}
   \item{boundary_year}{Year of the HUD boundary file used to place the CoC.
     Differs from \code{year} when HUD's file for \code{year} omits the CoC;
     the nearest year's polygon is used (53 CoC-years, e.g. \code{CA-524}
