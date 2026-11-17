@@ -31,7 +31,11 @@ test_that("long panels have exactly one row per key", {
   for (nm in names(keys)) {
     d <- as.data.frame(get_dataset(nm))[, keys[[nm]], drop = FALSE]
     expect_false(anyNA(d), label = sprintf("%s key has NA", nm))
-    expect_equal(anyDuplicated(d), 0L, label = sprintf("%s duplicated key", nm))
+    # hashed check: anyDuplicated() on a data.frame pastes every row (minutes on
+    # the 23M-row detail tables)
+    dup <- if (requireNamespace("vctrs", quietly = TRUE)) vctrs::vec_duplicate_any(d)
+           else anyDuplicated(d) > 0L
+    expect_false(dup, label = sprintf("%s duplicated key", nm))
   }
 })
 

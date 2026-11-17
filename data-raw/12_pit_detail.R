@@ -28,7 +28,7 @@ d <- utils::read.csv("data-raw/downloads/pit_coc_detail.csv",
 gen_csv  <- "data-raw/downloads/pit_detail_2024file.csv"
 gen_xlsb <- "data-raw/downloads/PIT-by-CoC-2024.xlsb"   # 2007-2024 workbook
 if (!file.exists(gen_csv) && file.exists(gen_xlsb)) {
-  run_extractor(Sys.which("python3"),
+  run_extractor(build_python(),
                 c("data-raw/pit_coc_detail_extract.py", shQuote(gen_xlsb), shQuote(gen_csv)),
                 out = gen_csv, src = gen_xlsb)
 }

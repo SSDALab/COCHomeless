@@ -38,7 +38,7 @@ if (!file.exists(xlsb)) {
 
 ## ---- extract to tidy CSV via Python helper ---------------------------------
 source("data-raw/00_build_helpers.R")
-run_extractor(Sys.which("python3"), c("data-raw/pit_xlsb_extract.py", shQuote(xlsb), shQuote(csv)),
+run_extractor(build_python(), c("data-raw/pit_xlsb_extract.py", shQuote(xlsb), shQuote(csv)),
               out = csv, src = xlsb)
 
 ## ---- build one data.frame per year -----------------------------------------

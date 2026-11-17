@@ -14,7 +14,7 @@ csv  <- "data-raw/downloads/pit_us.csv"
 if (!file.exists(xlsb)) stop("run 02_hud_pit.R first")
 
 source("data-raw/00_build_helpers.R")
-run_extractor(Sys.which("python3"), c("data-raw/pit_us_extract.py", shQuote(xlsb), shQuote(csv)),
+run_extractor(build_python(), c("data-raw/pit_us_extract.py", shQuote(xlsb), shQuote(csv)),
               out = csv, src = xlsb)   # BUG-015: never continue on a stale CSV
 
 pit_us <- utils::read.csv(csv)

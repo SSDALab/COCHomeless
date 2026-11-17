@@ -182,6 +182,19 @@ backtest_unsheltered <- function(pit, ids, hold_year, exclude = 2021L) {
 }
 
 ## ---- external extractors (BUG-015) ---------------------------------------------
+# The Python used for the .xlsb extractors: $COCHOMELESS_PYTHON if set, else the
+# project venv data-raw/.venv (create it with
+#   python3 -m venv data-raw/.venv && data-raw/.venv/bin/pip install -r data-raw/requirements.txt
+# ), else python3 on the PATH. Returns "" when none is found.
+build_python <- function(root = ".") {
+  cand <- c(Sys.getenv("COCHOMELESS_PYTHON"),
+            file.path(root, "data-raw", ".venv", "bin", "python"),
+            file.path(root, "data-raw", ".venv", "Scripts", "python.exe"),
+            Sys.which("python3"))
+  hit <- cand[nzchar(cand) & file.exists(cand)]
+  if (length(hit)) unname(hit[1]) else ""
+}
+
 # Run an external extractor that writes `out` from `src` (e.g. a Python .xlsb
 # reader). A failed run must never let the build continue on a stale `out`:
 #   * success                      -> `out` must exist and be newer than `src`;
@@ -204,7 +217,7 @@ run_extractor <- function(cmd, args, out, src) {
   } else {
     stop(sprintf("extractor failed (status %s) and %s is missing or older than %s; ",
                  status, out, src),
-         "install the extractor's requirements (python3 + pandas + pyxlsb)", call. = FALSE)
+         "set up the build Python: python3 -m venv data-raw/.venv && data-raw/.venv/bin/pip install -r data-raw/requirements.txt", call. = FALSE)
   }
   invisible(out)
 }

@@ -82,7 +82,9 @@ state-years. The rest is within 3.2%, all from CoCs that cross state lines.
 * `data-raw/15_release_diff.R` reports what a rebuild changed against the last
   release. A clean rebuild from scratch reproduces all 109 datasets exactly.
 * The `.xlsb` extractors no longer fail silently (BUG-015): a failed extraction
-  stops the build unless the cached CSV is newer than its workbook.
+  stops the build unless the cached CSV is newer than its workbook. The build
+  uses a project Python environment (`data-raw/.venv`, from
+  `data-raw/requirements.txt`) when present.
 * `homeless` and `homeless_na` rows are now sorted by `fips` (previously in
   join order). Values are unchanged.
 

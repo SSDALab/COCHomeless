@@ -30,9 +30,10 @@ then run `Rscript data-raw/99_render_bugs.R`. See `TESTING.md` for the process.
 
 - **Symptom:** On a machine without pandas, 08_pit_us.R and 09_pit_coc.R printed a Python traceback and carried on, building pit_us/pit_coc from whatever CSV was already in data-raw/downloads.
 - **Cause:** system2()'s exit status was ignored; the CSV is overwritten in place, so an old extract (or one from a previous workbook) was read as if fresh.
-- **Fix:** run_extractor() in 00_build_helpers.R, used by 02, 02b, 05, 08, 09 and 12: stops on failure unless the existing CSV is newer than the workbook it came from (then warns), and stops if a 'successful' run did not refresh the CSV. Unit-tested.
+- **Fix:** run_extractor() in 00_build_helpers.R, used by 02, 02b, 05, 08, 09 and 12: stops on failure unless the existing CSV is newer than the workbook it came from (then warns), and stops if a 'successful' run did not refresh the CSV. Unit-tested. build_python() selects $COCHOMELESS_PYTHON, then the project venv data-raw/.venv (data-raw/requirements.txt), then python3.
 - **Regression tests:**
   - `test-build-helpers.R`: [BUG-015] run_extractor never lets the build continue on a stale output
+  - `test-build-helpers.R`: [BUG-015] build_python prefers COCHOMELESS_PYTHON, then the project venv
 
 ## BUG-014 -- Counties with no CoC in any year dropped from county_pit_detail
 

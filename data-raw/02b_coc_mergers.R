@@ -18,7 +18,7 @@ csv  <- file.path(dl_dir, "coc_mergers_raw.csv")
 if (!file.exists(xlsb)) stop("run 02_hud_pit.R first to download the workbook")
 
 source("data-raw/00_build_helpers.R")
-run_extractor(Sys.which("python3"), c("data-raw/xlsb_sheet_to_csv.py", shQuote(xlsb),
+run_extractor(build_python(), c("data-raw/xlsb_sheet_to_csv.py", shQuote(xlsb),
               shQuote("CoC Mergers"), shQuote(csv)), out = csv, src = xlsb)
 
 raw <- utils::read.csv(csv, check.names = FALSE)

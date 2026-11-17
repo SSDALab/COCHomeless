@@ -28,6 +28,7 @@ Suggests:
     tidycensus,
     dplyr,
     tidyr,
+    vctrs,
     ggplot2,
     tigris,
     scales,

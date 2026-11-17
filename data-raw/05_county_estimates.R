@@ -150,7 +150,7 @@ if (!file.exists(state_csv)) {
                    shQuote(paste0("https://www.huduser.gov/portal/sites/default/",
                                   "files/xls/2007-2025-PIT-Counts-by-State.xlsb"))))
   }
-  run_extractor(Sys.which("python3"),
+  run_extractor(build_python(),
                 c("data-raw/pit_state_extract.py", shQuote(xlsb), shQuote(state_csv)),
                 out = state_csv, src = xlsb)
 }

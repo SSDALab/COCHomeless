@@ -1,0 +1,2 @@
+pandas>=2.0,<4  # pyxlsb engine is removed in pandas 4
+pyxlsb>=1.0.10

@@ -52,6 +52,16 @@ may be closed with no data test if its `fix` text says **build-only**.
 
 ## Rebuild checklist
 
+One-time setup: the HUD workbooks are `.xlsb` files read by small Python
+scripts, which need `pandas` (< 4) and `pyxlsb`. Install them in a project
+virtual environment (git-ignored); the build finds it automatically, or set
+`COCHOMELESS_PYTHON` to another interpreter:
+
+```sh
+python3 -m venv data-raw/.venv
+data-raw/.venv/bin/pip install -r data-raw/requirements.txt
+```
+
 ```sh
 # from the package root
 Rscript data-raw/08_pit_us.R                # HUD workbook -> pit_us
