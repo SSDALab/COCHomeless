@@ -1,9 +1,12 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://ssdalab.github.io/COCHomeless/404.html</loc></url>
+<url><loc>https://ssdalab.github.io/COCHomeless/BUGS.html</loc></url>
+<url><loc>https://ssdalab.github.io/COCHomeless/TESTING.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/articles/census-coc-crosswalk.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/articles/coc-pit-counts.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/articles/county-estimates.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/articles/index.html</loc></url>
+<url><loc>https://ssdalab.github.io/COCHomeless/articles/unsheltered-imputation.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/authors.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/index.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/news/index.html</loc></url>
@@ -13,6 +16,7 @@
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/coc_mergers.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/counties.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/county_coc.html</loc></url>
+<url><loc>https://ssdalab.github.io/COCHomeless/reference/county_coc_alloc.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/county_pit.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/county_pit_detail.html</loc></url>
 <url><loc>https://ssdalab.github.io/COCHomeless/reference/homeless.html</loc></url>

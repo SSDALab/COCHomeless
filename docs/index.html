@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,7 @@
 <li><a class="dropdown-item" href="articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -70,7 +71,7 @@
 <div class="section level2">
 <h2 id="coverage">Coverage<a class="anchor" aria-label="anchor" href="#coverage"></a>
 </h2>
-<p>All series run <strong>2007 through 2025</strong> (annual). The 2025 PIT counts are HUD’s official release; <code>hud2025_prelim</code> keeps the earlier Community Solutions estimate for reference. In 2021 HUD waived the unsheltered count for many CoCs during COVID-19, so 2021 understates homelessness — the vignettes show an ARIMA reconstruction.</p>
+<p>All series run <strong>2007 through 2025</strong> (annual). The 2025 PIT counts are HUD’s official release; <code>hud2025_prelim</code> keeps the earlier Community Solutions estimate for reference. In 2021 HUD waived the unsheltered count for many CoCs during COVID-19, so 2021 understates homelessness. <code>pit_coc</code>, <code>county_pit</code> and <code>pit_us</code> carry flagged <code>unsheltered_imp</code> / <code>total_imp</code> columns with an ARIMA estimate for the missing 2021 counts; HUD’s official columns are unchanged.</p>
 </div>
 <div class="section level2">
 <h2 id="three-forms-of-data">Three forms of data<a class="anchor" aria-label="anchor" href="#three-forms-of-data"></a>
@@ -108,7 +109,7 @@
 </tr>
 <tr>
 <td><code>pit_coc</code></td>
-<td>per-CoC sheltered / unsheltered / total, 2007–2025</td>
+<td>per-CoC sheltered / unsheltered / total, 2007–2025, plus flagged 2021 <code>_imp</code> columns</td>
 </tr>
 <tr>
 <td><code>pit_coc_detail</code></td>
@@ -180,7 +181,11 @@
 </tr>
 <tr>
 <td><code>county_pit</code></td>
-<td>county sheltered / unsheltered / total, 2007–2025 (long)</td>
+<td>county sheltered / unsheltered / total, 2007–2025 (long), plus flagged 2021 <code>_imp</code> columns</td>
+</tr>
+<tr>
+<td><code>county_coc_alloc</code></td>
+<td>where each county estimate comes from: county × year × source CoC, with counts</td>
 </tr>
 <tr>
 <td><code>county_pit_detail</code></td>
@@ -207,13 +212,15 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"COCHomeless"</span><span class="op">)</span></span></code></pre></div>
 <ul>
 <li>
-<strong>CoC Point-in-Time homeless counts</strong> (<code>coc-pit-counts</code>) — national &amp; state maps, per-CoC trends, sheltered/unsheltered series with ARIMA reconstruction of 2021.</li>
+<strong>CoC Point-in-Time homeless counts</strong> (<code>coc-pit-counts</code>) — national &amp; state maps, per-CoC trends, sheltered/unsheltered series with the 2021 imputation.</li>
 <li>
 <strong>County-level homeless estimates</strong> (<code>county-estimates</code>) — county-vs-CoC comparison, per-capita maps, US/CA/WA trends, a 2025 summary grid.</li>
 <li>
+<strong>Imputing the 2021 unsheltered count</strong> (<code>unsheltered-imputation</code>) — which counts are imputed, the method, a holdout test, and the national and state series with and without the imputation.</li>
+<li>
 <strong>Census-to-CoC crosswalk</strong> (<code>census-coc-crosswalk</code>) — using the crosswalk and <code>coc_mergers</code>.</li>
 </ul>
-<p>Vignette sources are in <a href="vignettes"><code>vignettes/</code></a>; build scripts that regenerate every dataset from source are in <a href="data-raw"><code>data-raw/</code></a>.</p>
+<p>Vignette sources are in <a href="vignettes"><code>vignettes/</code></a>; build scripts that regenerate every dataset from source are in <a href="data-raw"><code>data-raw/</code></a>. Data quality is tested on every rebuild; see <a href="https://github.com/SSDALab/COCHomeless/blob/master/TESTING.md" class="external-link"><code>TESTING.md</code></a> and the running list of known bugs and fixes in <a href="https://github.com/SSDALab/COCHomeless/blob/master/BUGS.md" class="external-link"><code>BUGS.md</code></a>.</p>
 </div>
 <div class="section level2">
 <h2 id="methodology--citation">Methodology &amp; citation<a class="anchor" aria-label="anchor" href="#methodology--citation"></a>

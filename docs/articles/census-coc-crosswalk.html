@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
 <li><a class="dropdown-item" href="../articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="../articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="../articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="../articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -201,7 +202,7 @@ to the spatial objects by <code>coc_num</code> (=
 <p>Unsheltered veterans by CoC, 2024, mapped:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Linking to GEOS 3.14.1, GDAL 3.12.3, PROJ 9.8.0; sf_use_s2() is TRUE</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.15.0, GDAL 3.13.3, PROJ 9.9.0; sf_use_s2() is TRUE</span></span>
 <span><span class="va">vets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">pit_coc_detail</span>,</span>
 <span>               <span class="va">year</span> <span class="op">==</span> <span class="fl">2024</span> <span class="op">&amp;</span> <span class="va">shelter</span> <span class="op">==</span> <span class="st">"Unsheltered"</span> <span class="op">&amp;</span> <span class="va">subpopulation</span> <span class="op">==</span> <span class="st">"Veterans"</span><span class="op">)</span></span>
 <span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">coc2024</span>, <span class="va">vets</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"coc_num"</span>, <span class="st">"count"</span><span class="op">)</span><span class="op">]</span>, by.x <span class="op">=</span> <span class="st">"COCNUM"</span>, by.y <span class="op">=</span> <span class="st">"coc_num"</span><span class="op">)</span></span>

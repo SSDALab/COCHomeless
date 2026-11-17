@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
 <li><a class="dropdown-item" href="../articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="../articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="../articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="../articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,12 +84,12 @@ counties with no CoC, following Almquist, Helwig and You (2020).
 <span><span class="co">#&gt;  $ state_name: chr [1:3144] "Alabama" "Alabama" "Alabama" "Alabama" ...</span></span>
 <span><span class="co">#&gt;  $ count10   : num [1:3144] 75 233 12 14 34 15 10 138 22 31 ...</span></span>
 <span><span class="co">#&gt;  $ count24   : num [1:3144] 58 178 23 28 68 11 21 125 44 28 ...</span></span>
-<span><span class="co">#&gt;  $ avg       : num [1:3144] 63 157.9 10.4 12.6 30.3 ...</span></span>
+<span><span class="co">#&gt;  $ avg       : num [1:3144] 63 157.9 10.8 13 31.5 ...</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">homeless_na</span><span class="op">$</span><span class="va">count24</span><span class="op">)</span><span class="op">)</span>   <span class="co"># counties imputed in 2024</span></span>
-<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/walkerke/tigris" class="external-link">tigris</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Linking to GEOS 3.14.1, GDAL 3.12.3, PROJ 9.8.0; sf_use_s2() is TRUE</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.15.0, GDAL 3.13.3, PROJ 9.9.0; sf_use_s2() is TRUE</span></span>
 <span><span class="co">#&gt; To enable caching of data, set `options(tigris_use_cache = TRUE)`</span></span>
 <span><span class="co">#&gt; in your R script or .Rprofile.</span></span>
 <span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/s2.html" class="external-link">sf_use_s2</a></span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span></span>

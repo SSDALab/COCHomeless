@@ -48,6 +48,8 @@
   [`county_coc2024`](https://ssdalab.github.io/COCHomeless/reference/county_coc.md)
   [`county_coc2025`](https://ssdalab.github.io/COCHomeless/reference/county_coc.md)
   : County to CoC area-weighted crosswalk
+- [`county_coc_alloc`](https://ssdalab.github.io/COCHomeless/reference/county_coc_alloc.md)
+  : Where each county estimate comes from: county x year x source CoC
 - [`county_pit`](https://ssdalab.github.io/COCHomeless/reference/county_pit.md)
   : County-level homeless estimates by shelter status, 2007-2025
 - [`county_pit_detail`](https://ssdalab.github.io/COCHomeless/reference/county_pit_detail.md)

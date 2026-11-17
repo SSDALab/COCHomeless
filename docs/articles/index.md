@@ -8,3 +8,5 @@
   counts](https://ssdalab.github.io/COCHomeless/articles/coc-pit-counts.md):
 - [County-level homeless
   estimates](https://ssdalab.github.io/COCHomeless/articles/county-estimates.md):
+- [Imputing the 2021 unsheltered
+  count](https://ssdalab.github.io/COCHomeless/articles/unsheltered-imputation.md):

@@ -150,7 +150,7 @@ Unsheltered veterans by CoC, 2024, mapped:
 ``` r
 
 library(sf)
-#> Linking to GEOS 3.14.1, GDAL 3.12.3, PROJ 9.8.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.15.0, GDAL 3.13.3, PROJ 9.9.0; sf_use_s2() is TRUE
 vets <- subset(pit_coc_detail,
                year == 2024 & shelter == "Unsheltered" & subpopulation == "Veterans")
 m <- merge(coc2024, vets[, c("coc_num", "count")], by.x = "COCNUM", by.y = "coc_num")

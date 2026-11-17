@@ -21,8 +21,9 @@ library(COCHomeless)
 All series run **2007 through 2025** (annual). The 2025 PIT counts are HUD's
 official release; `hud2025_prelim` keeps the earlier Community Solutions estimate
 for reference. In 2021 HUD waived the unsheltered count for many CoCs during
-COVID-19, so 2021 understates homelessness — the vignettes show an ARIMA
-reconstruction.
+COVID-19, so 2021 understates homelessness. `pit_coc`, `county_pit` and `pit_us`
+carry flagged `unsheltered_imp` / `total_imp` columns with an ARIMA estimate for
+the missing 2021 counts; HUD's official columns are unchanged.
 
 ## Three forms of data
 
@@ -34,7 +35,7 @@ reconstruction.
 | `coc2007` … `coc2025` | CoC boundary polygons (national `sf`), by year |
 | `coc_mergers` | CoC merger crosswalk over time (code lineage) |
 | `pit_us` | national totals split into sheltered / unsheltered |
-| `pit_coc` | per-CoC sheltered / unsheltered / total, 2007–2025 |
+| `pit_coc` | per-CoC sheltered / unsheltered / total, 2007–2025, plus flagged 2021 `_imp` columns |
 | `pit_coc_detail` | per-CoC by shelter type × subpopulation (veterans, chronic, youth, families, gender, race, age) |
 | `hud2025_prelim` | preliminary 2025 estimate (superseded by `hud2025`) |
 
@@ -58,7 +59,8 @@ Tract geography uses 2010-census tracts for 2007–2019 and 2020-census tracts f
 | `homeless` | county estimates `count07`…`count25` + ACS covariates (imputed) |
 | `homeless_na` | same, before imputation (missing counties as `NA`) |
 | `sp_homeless` | `homeless` as `sf`, also carrying `sheltered<yy>`/`unsheltered<yy>` |
-| `county_pit` | county sheltered / unsheltered / total, 2007–2025 (long) |
+| `county_pit` | county sheltered / unsheltered / total, 2007–2025 (long), plus flagged 2021 `_imp` columns |
+| `county_coc_alloc` | where each county estimate comes from: county × year × source CoC, with counts |
 | `county_pit_detail` | county by shelter type × subpopulation (gender, race, age, …) |
 | `counties`, `states` | full-US `sf` base layers |
 | `area` | county land area (km²) |
@@ -72,15 +74,19 @@ browseVignettes("COCHomeless")
 ```
 
 - **CoC Point-in-Time homeless counts** (`coc-pit-counts`) — national & state
-  maps, per-CoC trends, sheltered/unsheltered series with ARIMA reconstruction
-  of 2021.
+  maps, per-CoC trends, sheltered/unsheltered series with the 2021 imputation.
 - **County-level homeless estimates** (`county-estimates`) — county-vs-CoC
   comparison, per-capita maps, US/CA/WA trends, a 2025 summary grid.
+- **Imputing the 2021 unsheltered count** (`unsheltered-imputation`) — which
+  counts are imputed, the method, a holdout test, and the national and state
+  series with and without the imputation.
 - **Census-to-CoC crosswalk** (`census-coc-crosswalk`) — using the crosswalk and
   `coc_mergers`.
 
 Vignette sources are in [`vignettes/`](vignettes); build scripts that regenerate
-every dataset from source are in [`data-raw/`](data-raw).
+every dataset from source are in [`data-raw/`](data-raw). Data quality is
+tested on every rebuild; see [`TESTING.md`](https://github.com/SSDALab/COCHomeless/blob/master/TESTING.md) and the running list of
+known bugs and fixes in [`BUGS.md`](https://github.com/SSDALab/COCHomeless/blob/master/BUGS.md).
 
 ## Methodology & citation
 

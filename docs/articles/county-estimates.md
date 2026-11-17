@@ -21,15 +21,15 @@ str(homeless[, c("fips", "state_name", "count10", "count24", "avg")])
 #>  $ state_name: chr [1:3144] "Alabama" "Alabama" "Alabama" "Alabama" ...
 #>  $ count10   : num [1:3144] 75 233 12 14 34 15 10 138 22 31 ...
 #>  $ count24   : num [1:3144] 58 178 23 28 68 11 21 125 44 28 ...
-#>  $ avg       : num [1:3144] 63 157.9 10.4 12.6 30.3 ...
+#>  $ avg       : num [1:3144] 63 157.9 10.8 13 31.5 ...
 sum(is.na(homeless_na$count24))   # counties imputed in 2024
-#> [1] 0
+#> [1] 4
 ```
 
 ``` r
 
 library(sf); library(ggplot2); library(tigris)
-#> Linking to GEOS 3.14.1, GDAL 3.12.3, PROJ 9.8.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.15.0, GDAL 3.13.3, PROJ 9.9.0; sf_use_s2() is TRUE
 #> To enable caching of data, set `options(tigris_use_cache = TRUE)`
 #> in your R script or .Rprofile.
 sf_use_s2(FALSE)

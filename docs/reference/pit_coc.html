@@ -3,15 +3,11 @@
 year, split into sheltered and unsheltered components
 (sheltered + unsheltered = total), in long format. Complements the
 CoC-total hud2007 objects and the national pit_us
-series. Note the 2021 unsheltered values: HUD waived the unsheltered
-count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
-2021."><meta property="og:description" content="HUD Point-in-Time (PIT) homeless counts for each Continuum of Care (CoC) and
+series."><meta property="og:description" content="HUD Point-in-Time (PIT) homeless counts for each Continuum of Care (CoC) and
 year, split into sheltered and unsheltered components
 (sheltered + unsheltered = total), in long format. Complements the
 CoC-total hud2007 objects and the national pit_us
-series. Note the 2021 unsheltered values: HUD waived the unsheltered
-count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
-2021."></head><body>
+series."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +15,7 @@ count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +29,7 @@ count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="../articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="../articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="../articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -56,9 +53,7 @@ count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
 year, split into sheltered and unsheltered components
 (<code>sheltered + unsheltered = total</code>), in long format. Complements the
 CoC-total <code><a href="hud.html">hud2007</a></code> objects and the national <code><a href="pit_us.html">pit_us</a></code>
-series. Note the 2021 <code>unsheltered</code> values: HUD waived the unsheltered
-count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
-2021.</p>
+series.</p>
     </div>
 
     <div class="section level2">
@@ -68,27 +63,69 @@ count for many CoCs during COVID-19, so many CoCs report 0 unsheltered in
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>A data frame with one row per CoC-year and 5 variables:</p><dl><dt>coc_num</dt>
+    <p>A data frame with one row per CoC-year and 9 variables:</p><dl><dt>coc_num</dt>
 <dd><p>CoC number, e.g. <code>"WA-500"</code>.</p></dd>
 
   <dt>year</dt>
 <dd><p>Year of the count.</p></dd>
 
   <dt>total</dt>
-<dd><p>Overall homeless (PIT).</p></dd>
+<dd><p>Overall homeless (PIT), as published by HUD.</p></dd>
 
   <dt>sheltered</dt>
-<dd><p>Sheltered homeless.</p></dd>
+<dd><p>Sheltered homeless, as published by HUD.</p></dd>
 
   <dt>unsheltered</dt>
-<dd><p>Unsheltered homeless.</p></dd>
+<dd><p>Unsheltered homeless, as published by HUD.</p></dd>
+
+  <dt>total_imp</dt>
+<dd><p><code>sheltered + unsheltered_imp</code>. Equals <code>total</code>
+    except where <code>unsheltered_imputed</code> is <code>TRUE</code>.</p></dd>
+
+  <dt>unsheltered_imp</dt>
+<dd><p>Unsheltered homeless with the 2021 waiver gap
+    imputed. Equals <code>unsheltered</code> except where
+    <code>unsheltered_imputed</code> is <code>TRUE</code>.</p></dd>
+
+  <dt>unsheltered_imputed</dt>
+<dd><p><code>TRUE</code> if <code>unsheltered_imp</code> is an
+    imputed value, not a HUD count. Only ever <code>TRUE</code> in 2021.</p></dd>
+
+  <dt>imputation_method</dt>
+<dd><p><code>"arima_kalman"</code>, or
+    <code>"log_linear_interp"</code> for series too short to fit an ARIMA;
+    <code>NA</code> for HUD counts.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
     <p>HUD AHAR Part 1 PIT estimates, from the PIT-by-CoC workbook
-  (see <code><a href="hud.html">hud2007</a></code>).</p>
+  (see <code><a href="hud.html">hud2007</a></code>). Imputation: <code>data-raw/14_unsheltered_imputation.R</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><strong>2021:</strong> HUD waived the unsheltered count for many CoCs during
+COVID-19, so many CoCs report 0 unsheltered in 2021. The official columns
+keep HUD's figures; <code>unsheltered_imp</code> / <code>total_imp</code> carry a
+flagged imputation (see the section below).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="imputed-unsheltered-counts">Imputed 2021 unsheltered counts<a class="anchor" aria-label="anchor" href="#imputed-unsheltered-counts"></a></h2>
+
+
+<p>HUD's COVID-19 waiver let CoCs skip the 2021 unsheltered count, and many
+report 0. The <code>_imp</code> columns carry an estimate for those CoC-years;
+HUD's official <code>total</code>, <code>sheltered</code> and <code>unsheltered</code> are
+never modified. A 2021 zero is imputed only when the CoC counted unsheltered
+people in the years either side (159 CoCs); the estimate is a
+once-differenced ARIMA on <code>log(1 + unsheltered)</code> with Kalman smoothing,
+so both earlier and later years inform it. In a holdout test (2019 and 2023
+hidden and re-imputed for the same CoCs) it was 3-4% low in total with a
+15-17% median per-CoC error. Use the official columns to reproduce HUD; use
+the <code>_imp</code> columns for trends across 2021. The same note is attached to
+the data as <code>attr(x, "note")</code>. See
+<code><a href="../articles/unsheltered-imputation.html">vignette("unsheltered-imputation", package = "COCHomeless")</a></code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

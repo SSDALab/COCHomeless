@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,6 +21,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="../articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="../articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="../articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -38,6 +39,49 @@
       <small>Source: <a href="https://github.com/SSDALab/COCHomeless/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="cochomeless-040">COCHomeless 0.4.0<a class="anchor" aria-label="anchor" href="#cochomeless-040"></a></h2>
+<div class="section level3">
+<h3 id="data-corrections-0-4-0">Data corrections<a class="anchor" aria-label="anchor" href="#data-corrections-0-4-0"></a></h3>
+<p>Four more allocation defects let people be lost, misplaced or double-counted between a CoC’s PIT count and the county estimates. They were found by checking, CoC by CoC, that every reported person reaches a county. County estimates change for 4,221 county-years (7.1%) in 1,103 counties, almost all before 2019; re-run analyses built on 0.3.0 county data. CoC and national PIT figures are unchanged. Each defect is in the new bug registry (<code>BUGS.md</code>) with its regression tests.</p>
+<ul><li><p><strong>CoCs missing from a year’s HUD boundary file had their whole count dropped (BUG-008).</strong> HUD’s yearly boundary files omit some CoCs that reported a PIT count: 53 CoC-years and 21,906 people, for example CA-524 (Yuba/Sutter) 2009-2012, LA-509 2007-2014 and five Maryland CoCs in 2020. Those people reached no county. The imputed panel hid the loss, because the uncovered counties were filled by the model. The nearest year’s polygon is now borrowed; <code>county_coc_alloc$boundary_year</code> records which year was used.</p></li>
+<li><p><strong>A county could draw its count from a CoC that only slivered into it (BUG-009).</strong> When HUD’s file left a county uncovered, a neighbouring CoC’s boundary sliver became its “primary” CoC. Sutter County, CA drew on Yolo County’s CoC (CA-521) for 2009-2012 through a 6 km^2 overlap, which produced the 485% jump from 2012 to 2013 when the boundary was repaired. A primary CoC must now cover at least 1% of the county. Counties that HUD’s boundaries do not cover are imputed, as in Almquist, Helwig and You (2020).</p></li>
+<li><p><strong>Kansas City’s Kansas portion was charged to the wrong CoC before 2016 (BUG-010).</strong> The bi-state split charged Kansas’s residual to the out-of-state CoC with the largest overlap. HUD’s pre-2016 files draw MO-604 barely into Kansas, so slivers of OK-503, MO-603 or MO-606 won instead. Oklahoma’s balance-of-state CoC lost 1,981 people over 2007-2015, falling to zero in some years. The bi-state CoC is now identified from the latest boundary file and held fixed.</p></li>
+<li><p><strong>Counties that HUD’s map dropped from their CoC for a few years were double-counted (BUG-016).</strong> Some boundary files draw a CoC without one of its counties. For example, CA-524 (Yuba/Sutter) covers 8 of Yuba County’s 1,645 km^2 in the 2013-2014 files, and that polygon is also the fallback for 2011-2012. The county was then modelled on top of its CoC’s count, and the CoC’s whole count landed on the remaining counties. Sutter carried all of CA-524 in 2011-2014. This affected 39 county-years in 18 counties (7 CoCs) and about 1,460 double-counted people. Such a county now stays in its CoC when the CoC holds it in the years before and after and reports that year. These rows have role <code>"bridged"</code> in <code>county_coc_alloc</code>.</p></li>
+<li><p><strong>Counties with no CoC in any year were dropped from <code>county_pit_detail</code> (BUG-014)</strong>, for example Baker County, FL. They now use the national profile.</p></li>
+</ul><p>With these fixed, county estimates before imputation reproduce every CoC’s HUD count exactly in every year, and HUD’s published state totals exactly in 86% of state-years. The rest is within 3.2%, all from CoCs that cross state lines.</p>
+</div>
+<div class="section level3">
+<h3 id="new-data-0-4-0">New data<a class="anchor" aria-label="anchor" href="#new-data-0-4-0"></a></h3>
+<ul><li>
+<strong>Flagged imputation of the 2021 unsheltered count.</strong> HUD’s COVID-19 waiver left 159 CoCs reporting 0 unsheltered people in 2021. <code>pit_coc</code>, <code>county_pit</code> and <code>pit_us</code> gain <code>unsheltered_imp</code>, <code>total_imp</code> and an imputation flag:
+<ul><li>The estimate is a once-differenced ARIMA on <code>log(1 + unsheltered)</code> with Kalman smoothing.</li>
+<li>It adds 172,025 people nationally, putting 2021 unsheltered at 226,529 against 226,080 in 2020 and 233,832 in 2022.</li>
+<li>In a holdout test it is 3-4% low in total, with a 15-17% median error per CoC.</li>
+<li>HUD’s official columns are unchanged.</li>
+<li>Documented in the new vignette <code><a href="../articles/unsheltered-imputation.html">vignette("unsheltered-imputation")</a></code> and on each object as <code>attr(x, "note")</code>.</li>
+</ul></li>
+<li>
+<strong><code>county_coc_alloc</code></strong>: every county estimate traced to its sources. Each row gives a county, a year, a contributing CoC, how many people that CoC contributed, the CoC’s role (primary / nested / bi-state), its area coverage and the HUD boundary year used.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="testing-and-quality-control-0-4-0">Testing and quality control<a class="anchor" aria-label="anchor" href="#testing-and-quality-control-0-4-0"></a></h3>
+<ul><li>A formal testing layer, described in <code>TESTING.md</code>:
+<ul><li>unit tests for the build logic, which now lives in <code>data-raw/00_build_helpers.R</code>;</li>
+<li>allocation QC: per-CoC conservation, boundary gaps, sliver assignments, and a cause for every extreme county year-over-year swing;</li>
+<li>a running bug registry (<code>tests/testthat/fixtures/bug_registry.csv</code>, shown as <code>BUGS.md</code>) with meta-tests requiring a tagged regression test for every fixed bug.</li>
+</ul></li>
+<li>
+<code>data-raw/13_qc_report.R</code> writes the flagged rows after each rebuild.</li>
+<li>New build guards: the apportionment stops if any CoC’s count is not fully placed or a bi-state split goes negative. ACS pulls are cached and retried (BUG-013).</li>
+<li>A data contract (<code>test-data-contract.R</code>): every shipped column keeps its name and type against the snapshot in <code>tests/testthat/fixtures/schema.csv</code>; long panels have one row per key; <code>sp_homeless</code> carries exactly the counts in <code>homeless</code>. 0.4.0 passes the contract taken from 0.3.0, so no column was removed or retyped.</li>
+<li>
+<code>data-raw/15_release_diff.R</code> reports what a rebuild changed against the last release. A clean rebuild from scratch reproduces all 109 datasets exactly.</li>
+<li>The <code>.xlsb</code> extractors no longer fail silently (BUG-015): a failed extraction stops the build unless the cached CSV is newer than its workbook. The build uses a project Python environment (<code>data-raw/.venv</code>, from <code>data-raw/requirements.txt</code>) when present.</li>
+<li>
+<code>homeless</code> and <code>homeless_na</code> rows are now sorted by <code>fips</code> (previously in join order). Values are unchanged.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="cochomeless-030">COCHomeless 0.3.0<a class="anchor" aria-label="anchor" href="#cochomeless-030"></a></h2>
 <div class="section level3">

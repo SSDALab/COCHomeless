@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">COCHomeless</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
 <li><a class="dropdown-item" href="../articles/census-coc-crosswalk.html">Census-to-CoC crosswalk</a></li>
     <li><a class="dropdown-item" href="../articles/coc-pit-counts.html">CoC Point-in-Time homeless counts</a></li>
     <li><a class="dropdown-item" href="../articles/county-estimates.html">County-level homeless estimates</a></li>
+    <li><a class="dropdown-item" href="../articles/unsheltered-imputation.html">Imputing the 2021 unsheltered count</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -89,50 +90,45 @@ boundaries as <code>sf</code> polygons.</p>
 for many CoCs, not a real decline.</p>
 </div>
 <div class="section level2">
-<h2 id="sheltered-unsheltered-and-total-with-arima-reconstruction-of-2021">Sheltered, unsheltered and total, with ARIMA reconstruction of
-2021<a class="anchor" aria-label="anchor" href="#sheltered-unsheltered-and-total-with-arima-reconstruction-of-2021"></a>
+<h2 id="sheltered-unsheltered-and-total-with-the-imputed-2021-count">Sheltered, unsheltered and total, with the imputed 2021 count<a class="anchor" aria-label="anchor" href="#sheltered-unsheltered-and-total-with-the-imputed-2021-count"></a>
 </h2>
 <p><code>pit_us</code> splits the national total into sheltered and
 unsheltered counts. The 2021 unsheltered count collapsed because of the
-waiver; the sheltered count held up. We treat 2021 as missing and
-reconstruct it for each series with an ARIMA model (Kalman smoothing via
-<code><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_kalman.html" class="external-link">imputeTS::na_kalman</a></code>), shown as hollow points.</p>
+waiver; the sheltered count held up. The package ships a flagged
+reconstruction of the missing 2021 unsheltered counts
+(<code>unsheltered_imp</code>, <code>total_imp</code>), built CoC by CoC
+with a once-differenced ARIMA and Kalman smoothing, and shown here as
+hollow points. HUD’s official columns are unchanged. See
+<code><a href="../articles/unsheltered-imputation.html">vignette("unsheltered-imputation")</a></code> for the method and its
+validation.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"total"</span>, <span class="st">"sheltered"</span>, <span class="st">"unsheltered"</span><span class="op">)</span></span>
-<span><span class="va">yr</span> <span class="op">&lt;-</span> <span class="va">pit_us</span><span class="op">$</span><span class="va">year</span></span>
-<span><span class="co"># ARIMA-impute the 2021 value of one series (2021 set to NA)</span></span>
-<span><span class="va">arima_2021</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">v</span>; <span class="va">x</span><span class="op">[</span><span class="va">yr</span> <span class="op">==</span> <span class="fl">2021</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">imputeTS</span><span class="fu">::</span><span class="fu"><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_kalman.html" class="external-link">na_kalman</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">yr</span><span class="op">)</span><span class="op">)</span>, model <span class="op">=</span> <span class="st">"auto.arima"</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">yr</span> <span class="op">==</span> <span class="fl">2021</span><span class="op">]</span></span>
-<span><span class="op">}</span></span>
 <span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">series</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>year <span class="op">=</span> <span class="va">yr</span>, series <span class="op">=</span> <span class="va">s</span>, value <span class="op">=</span> <span class="va">pit_us</span><span class="op">[[</span><span class="va">s</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">imp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>year <span class="op">=</span> <span class="fl">2021</span>, series <span class="op">=</span> <span class="va">series</span>,</span>
-<span>                  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">series</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="fu">arima_2021</span><span class="op">(</span><span class="va">pit_us</span><span class="op">[[</span><span class="va">s</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>year <span class="op">=</span> <span class="va">pit_us</span><span class="op">$</span><span class="va">year</span>, series <span class="op">=</span> <span class="va">s</span>, value <span class="op">=</span> <span class="va">pit_us</span><span class="op">[[</span><span class="va">s</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">y21</span> <span class="op">&lt;-</span> <span class="va">pit_us</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">2021</span></span>
+<span><span class="va">imp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>year <span class="op">=</span> <span class="fl">2021</span>, series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"total"</span>, <span class="st">"unsheltered"</span><span class="op">)</span>,</span>
+<span>                  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pit_us</span><span class="op">$</span><span class="va">total_imp</span><span class="op">[</span><span class="va">y21</span><span class="op">]</span>, <span class="va">pit_us</span><span class="op">$</span><span class="va">unsheltered_imp</span><span class="op">[</span><span class="va">y21</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">obs</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">year</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">series</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">imp</span>, shape <span class="op">=</span> <span class="fl">21</span>, fill <span class="op">=</span> <span class="st">"white"</span>, size <span class="op">=</span> <span class="fl">3.2</span>, stroke <span class="op">=</span> <span class="fl">1.1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="va"><a href="https://scales.r-lib.org/reference/comma.html" class="external-link">comma</a></span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"U.S. PIT homeless by shelter status, 2007-2025"</span>,</span>
-<span>       subtitle <span class="op">=</span> <span class="st">"Hollow points: ARIMA reconstruction of the waiver-affected 2021 count"</span>,</span>
+<span>       subtitle <span class="op">=</span> <span class="st">"Hollow points: imputed 2021 (pit_us$total_imp, $unsheltered_imp)"</span>,</span>
 <span>       y <span class="op">=</span> <span class="cn">NULL</span>, x <span class="op">=</span> <span class="cn">NULL</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="coc-pit-counts_files/figure-html/arima-2021-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="coc-pit-counts_files/figure-html/imputed-2021-1.png" class="r-plt" alt="" width="672"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">series</span>, observed_2021 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">series</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="va">pit_us</span><span class="op">[[</span><span class="va">s</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="va">yr</span> <span class="op">==</span> <span class="fl">2021</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>           arima_2021 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">imp</span><span class="op">$</span><span class="va">value</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                  series observed_2021 arima_2021</span></span>
-<span><span class="co">#&gt; total             total        380630     561084</span></span>
-<span><span class="co">#&gt; sheltered     sheltered        326126     289456</span></span>
-<span><span class="co">#&gt; unsheltered unsheltered         54504     228220</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pit_us</span><span class="op">[</span><span class="va">pit_us</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">2021</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"total"</span>, <span class="st">"total_imp"</span>, <span class="st">"unsheltered"</span>, <span class="st">"unsheltered_imp"</span>, <span class="st">"n_coc_imputed"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;     total total_imp unsheltered unsheltered_imp n_coc_imputed</span></span>
+<span><span class="co">#&gt; 15 380630    552655       54504          226529           159</span></span></code></pre></div>
 <p>A national map of 2024, CoCs shaded by PIT count. Alaska and Hawaii
 are repositioned with <code><a href="https://rdrr.io/pkg/tigris/man/shift_geometry.html" class="external-link">tigris::shift_geometry()</a></code> for a
 compact lower-48 layout:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/walkerke/tigris" class="external-link">tigris</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Linking to GEOS 3.14.1, GDAL 3.12.3, PROJ 9.8.0; sf_use_s2() is TRUE</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.15.0, GDAL 3.13.3, PROJ 9.9.0; sf_use_s2() is TRUE</span></span>
 <span><span class="co">#&gt; To enable caching of data, set `options(tigris_use_cache = TRUE)`</span></span>
 <span><span class="co">#&gt; in your R script or .Rprofile.</span></span>
 <span><span class="co"># drop the far Pacific/Caribbean territories (shift_geometry only repositions</span></span>
